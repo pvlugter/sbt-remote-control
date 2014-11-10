@@ -35,20 +35,28 @@ trait CustomPicklerUnpickler {
     mkSeqSetPickler[T, Vector]
   implicit def arrayPickler[A >: Null: FastTypeTag](implicit elemPickler: SPickler[A], elemUnpickler: Unpickler[A], collTag: FastTypeTag[Array[A]], format: PickleFormat, cbf: CanBuildFrom[Array[A], A, Array[A]]): SPickler[Array[A]] with Unpickler[Array[A]] =
     mkTravPickler[A, Array[A]]
+  implicit def nilPickler(implicit pf: PickleFormat): SPickler[Nil.type] with Unpickler[Nil.type] = new SPickler[Nil.type] with Unpickler[Nil.type] {
+    val format: PickleFormat = pf
+    val ccUnpickler: Unpickler[::[String]] = implicitly[Unpickler[::[String]]]
+    def pickle(coll: Nil.type, builder: PBuilder): Unit = {
+      builder.beginEntry(coll)
+      builder.beginCollection(0)
+      builder.endCollection
+      builder.endEntry()      
+    }
+    def unpickle(tag: => FastTypeTag[_], preader: PReader): Any =
+      ccUnpickler.unpickle(tag, preader).asInstanceOf[Nil.type]
+  }
   implicit def listUnpickler[A: FastTypeTag](implicit elemPickler: SPickler[A], elemUnpickler: Unpickler[A],
       ccPickler: SPickler[::[A]], ccUnpickler: Unpickler[::[A]],
       collTag: FastTypeTag[List[A]],
       pf: PickleFormat): SPickler[List[A]] with Unpickler[List[A]] = new SPickler[List[A]] with Unpickler[List[A]] {
     val format: PickleFormat = pf
+    val np = nilPickler
     def pickle(coll: List[A], builder: PBuilder): Unit =
       coll match {
-        case Nil =>
-          builder.beginEntry(coll)
-          builder.beginCollection(0)
-          builder.endCollection
-          builder.endEntry()
-        case xs =>
-          ccPickler.pickle(coll.asInstanceOf[::[A]], builder)
+        case Nil       => np.pickle(Nil, builder)
+        case xs: ::[A] => ccPickler.pickle(xs, builder)
       }
     def unpickle(tag: => FastTypeTag[_], preader: PReader): Any =
       ccUnpickler.unpickle(tag, preader).asInstanceOf[List[A]]

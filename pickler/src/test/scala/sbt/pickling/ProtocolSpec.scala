@@ -41,6 +41,7 @@ class ProtocolSpec extends Specification {
 
   def arrayTypes = {
     // arrays
+    roundTrip(Nil) // custom format to support both Nil and List[A]
     roundTrip(Nil: List[String])
     roundTrip(Array(): Array[String])
     roundTrip(Vector(): Vector[String])
