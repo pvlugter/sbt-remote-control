@@ -20,6 +20,8 @@ class ProtocolTest {
     builds = Seq(build),
     projects = Seq(protocol.MinimalProjectStructure(scope.project.get, Seq("com.foo.Plugin"))))
 
+  final case class PlayStartedEvent(port: Int)
+
   @Test
   def testMessages: Unit = {
     // messages

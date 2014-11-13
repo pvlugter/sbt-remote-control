@@ -50,7 +50,9 @@ private[server] class TaskSendEventService(taskIdFinder: TaskIdFinder, eventSink
   }
 
   override def sendEvent[T: Writes](event: T): Unit =
-    eventSink.send(TaskEvent(taskId, event))
+    // TODO: Fix this
+    ???
+  // eventSink.send(TaskEvent(taskId, event))
 }
 
 private final class BackgroundJobSendEventService(jobId: Long, eventSink: JsonSink[BackgroundJobEvent])

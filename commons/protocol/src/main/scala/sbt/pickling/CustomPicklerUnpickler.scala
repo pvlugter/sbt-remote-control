@@ -6,8 +6,45 @@ import scala.pickling._
 import scala.reflect.runtime.universe._
 import scala.collection.immutable.::
 import scala.collection.generic.CanBuildFrom
+import sbt.protocol.{ SerializedValue, JsonValue, SbtPrivateSerializedValue }
 
-trait CustomPicklerUnpickler {
+trait CustomPicklerUnpickler extends LowPriorityCustomPicklerUnpickler {
+  implicit def jsonValuePickler(implicit pf: PickleFormat): SPickler[JsonValue] with Unpickler[JsonValue] = new SPickler[JsonValue] with Unpickler[JsonValue] {
+    val format: PickleFormat = pf
+    val stringPickler = implicitly[SPickler[String]]
+    val stringUnpickler = implicitly[Unpickler[String]]
+    def pickle(jv: JsonValue, builder: PBuilder): Unit = {
+      builder.pushHints()
+      builder.hintTag(FastTypeTag.String)
+      stringPickler.pickle(jv.json, builder)
+      builder.popHints()
+    }
+    def unpickle(tag: => FastTypeTag[_], preader: PReader): Any = {
+      val s = stringUnpickler.unpickle(FastTypeTag.String, preader).asInstanceOf[String]
+      try {
+        val result = JsonValue(s)
+        result
+      } catch {
+        case _: Throwable => throw new PicklingException(s""""$s" is not valid ${tag.tpe}""")
+      }
+    }
+  }
+
+  implicit def serializedValuePickler(implicit pf: PickleFormat): SPickler[SerializedValue] with Unpickler[SerializedValue] = new SPickler[SerializedValue] with Unpickler[SerializedValue] {
+    val format: PickleFormat = pf
+    val jsonPickler = implicitly[SPickler[JsonValue]]
+    val jsonUnpickler = implicitly[Unpickler[JsonValue]]
+    def pickle(a: SerializedValue, builder: PBuilder): Unit =
+      a match {
+        case spsv: SbtPrivateSerializedValue => jsonPickler.pickle(spsv.toJson, builder)
+      }
+    def unpickle(tag: => FastTypeTag[_], preader: PReader): Any = {
+      jsonUnpickler.unpickle(tag, preader)
+    }
+  }
+}
+
+trait LowPriorityCustomPicklerUnpickler {
   implicit def canToStringPickler[A: FastTypeTag](implicit canToString: CanToString[A], pf: PickleFormat): SPickler[A] with Unpickler[A] = new SPickler[A] with Unpickler[A] {
     val format: PickleFormat = pf
     val stringPickler = implicitly[SPickler[String]]
@@ -15,7 +52,7 @@ trait CustomPicklerUnpickler {
     def pickle(a: A, builder: PBuilder): Unit = {
       builder.pushHints()
       builder.hintTag(FastTypeTag.String)
-      stringPickler.pickle(canToString.toString(a) , builder)
+      stringPickler.pickle(canToString.toString(a), builder)
       builder.popHints()
     }
     def unpickle(tag: => FastTypeTag[_], preader: PReader): Any = {
@@ -23,8 +60,7 @@ trait CustomPicklerUnpickler {
       try {
         val result = canToString.fromString(s)
         result
-      }
-      catch {
+      } catch {
         case _: Throwable => throw new PicklingException(s""""$s" is not valid ${tag.tpe}""")
       }
     }
@@ -42,20 +78,20 @@ trait CustomPicklerUnpickler {
       builder.beginEntry(coll)
       builder.beginCollection(0)
       builder.endCollection
-      builder.endEntry()      
+      builder.endEntry()
     }
     def unpickle(tag: => FastTypeTag[_], preader: PReader): Any =
       ccUnpickler.unpickle(tag, preader).asInstanceOf[Nil.type]
   }
   implicit def listUnpickler[A: FastTypeTag](implicit elemPickler: SPickler[A], elemUnpickler: Unpickler[A],
-      ccPickler: SPickler[::[A]], ccUnpickler: Unpickler[::[A]],
-      collTag: FastTypeTag[List[A]],
-      pf: PickleFormat): SPickler[List[A]] with Unpickler[List[A]] = new SPickler[List[A]] with Unpickler[List[A]] {
+    ccPickler: SPickler[::[A]], ccUnpickler: Unpickler[::[A]],
+    collTag: FastTypeTag[List[A]],
+    pf: PickleFormat): SPickler[List[A]] with Unpickler[List[A]] = new SPickler[List[A]] with Unpickler[List[A]] {
     val format: PickleFormat = pf
     val np = nilPickler
     def pickle(coll: List[A], builder: PBuilder): Unit =
       coll match {
-        case Nil       => np.pickle(Nil, builder)
+        case Nil => np.pickle(Nil, builder)
         case xs: ::[A] => ccPickler.pickle(xs, builder)
       }
     def unpickle(tag: => FastTypeTag[_], preader: PReader): Any =
@@ -71,7 +107,7 @@ trait CustomPicklerUnpickler {
   implicit lazy val nonePickler: SPickler[None.type] with Unpickler[None.type] =
     sys.error("use the pickler for Option[A]")
   implicit def optionPickler[A: FastTypeTag](implicit elemPickler: SPickler[A], elemUnpickler: Unpickler[A], collTag: FastTypeTag[Option[A]],
-      pf: PickleFormat): SPickler[Option[A]] with Unpickler[Option[A]] = new SPickler[Option[A]] with Unpickler[Option[A]] {
+    pf: PickleFormat): SPickler[Option[A]] with Unpickler[Option[A]] = new SPickler[Option[A]] with Unpickler[Option[A]] {
     val format: PickleFormat = pf
     val elemTag = implicitly[FastTypeTag[A]]
     val isPrimitive = elemTag.tpe.isEffectivelyPrimitive
@@ -87,12 +123,11 @@ trait CustomPicklerUnpickler {
             builder.hintStaticallyElidedType()
             builder.hintTag(elemTag)
             builder.pinHints()
-          }          
-          else builder.hintTag(elemTag)
-          elemPickler.pickle(elem, builder)          
+          } else builder.hintTag(elemTag)
+          elemPickler.pickle(elem, builder)
         case None =>
           builder.hintTag(FastTypeTag.Null)
-          nullPickler.pickle(null, builder) 
+          nullPickler.pickle(null, builder)
       }
 
       builder.popHints()
@@ -105,8 +140,7 @@ trait CustomPicklerUnpickler {
         reader.hintStaticallyElidedType()
         reader.hintTag(elemTag)
         reader.pinHints()
-      }
-      else reader.hintTag(elemTag)
+      } else reader.hintTag(elemTag)
       val length = reader.readLength
       val result: Option[A] =
         if (length == 0) None
@@ -132,72 +166,70 @@ trait CustomPicklerUnpickler {
     }
   }
 
-  def mkSeqSetPickler[A: FastTypeTag, Coll[_] <: Traversable[_]]
-    (implicit elemPickler: SPickler[A], elemUnpickler: Unpickler[A],
-              pf: PickleFormat, cbf: CanBuildFrom[Coll[A], A, Coll[A]],
-              collTag: FastTypeTag[Coll[A]]): SPickler[Coll[A]] with Unpickler[Coll[A]] =
-    mkTravPickler[A, Coll[A ]]
-  def mkTravPickler[A: FastTypeTag, C <% Traversable[_]: FastTypeTag]
-    (implicit elemPickler: SPickler[A], elemUnpickler: Unpickler[A],
-              pf: PickleFormat, cbf: CanBuildFrom[C, A, C],
-              collTag: FastTypeTag[C]): SPickler[C] with Unpickler[C] =
+  def mkSeqSetPickler[A: FastTypeTag, Coll[_] <: Traversable[_]](implicit elemPickler: SPickler[A], elemUnpickler: Unpickler[A],
+    pf: PickleFormat, cbf: CanBuildFrom[Coll[A], A, Coll[A]],
+    collTag: FastTypeTag[Coll[A]]): SPickler[Coll[A]] with Unpickler[Coll[A]] =
+    mkTravPickler[A, Coll[A]]
+  def mkTravPickler[A: FastTypeTag, C <% Traversable[_]: FastTypeTag](implicit elemPickler: SPickler[A], elemUnpickler: Unpickler[A],
+    pf: PickleFormat, cbf: CanBuildFrom[C, A, C],
+    collTag: FastTypeTag[C]): SPickler[C] with Unpickler[C] =
     new SPickler[C] with Unpickler[C] {
-    val format: PickleFormat = pf
-    val elemTag  = implicitly[FastTypeTag[A]]
-    val isPrimitive = elemTag.tpe.isEffectivelyPrimitive
+      val format: PickleFormat = pf
+      val elemTag = implicitly[FastTypeTag[A]]
+      val isPrimitive = elemTag.tpe.isEffectivelyPrimitive
 
-    def pickle(coll: C, builder: PBuilder): Unit = {
-      if (elemTag == FastTypeTag.Int) builder.hintKnownSize(coll.size * 4 + 100)
-      builder.beginEntry(coll)
-      builder.beginCollection(coll.size)
+      def pickle(coll: C, builder: PBuilder): Unit = {
+        if (elemTag == FastTypeTag.Int) builder.hintKnownSize(coll.size * 4 + 100)
+        builder.beginEntry(coll)
+        builder.beginCollection(coll.size)
 
-      builder.pushHints()
-      if (isPrimitive) {
-        builder.hintStaticallyElidedType()
-        builder.hintTag(elemTag)
-        builder.pinHints()
-      }
-
-      (coll: Traversable[_]).asInstanceOf[Traversable[A]].foreach { (elem: A) =>
-        builder putElement { b =>
-          if (!isPrimitive) b.hintTag(elemTag)
-          elemPickler.pickle(elem, b)
+        builder.pushHints()
+        if (isPrimitive) {
+          builder.hintStaticallyElidedType()
+          builder.hintTag(elemTag)
+          builder.pinHints()
         }
+
+        (coll: Traversable[_]).asInstanceOf[Traversable[A]].foreach { (elem: A) =>
+          builder putElement { b =>
+            if (!isPrimitive) b.hintTag(elemTag)
+            elemPickler.pickle(elem, b)
+          }
+        }
+
+        builder.popHints()
+        builder.endCollection()
+        builder.endEntry()
       }
 
-      builder.popHints()
-      builder.endCollection()
-      builder.endEntry()
+      def unpickle(tpe: => FastTypeTag[_], preader: PReader): Any = {
+        val reader = preader.beginCollection()
+
+        preader.pushHints()
+        if (isPrimitive) {
+          reader.hintStaticallyElidedType()
+          reader.hintTag(elemTag)
+          reader.pinHints()
+        } else {
+          reader.hintTag(elemTag) // custom code here
+          reader.pinHints() // custom code here
+        }
+
+        val length = reader.readLength()
+        val builder = cbf.apply()
+        var i = 0
+        while (i < length) {
+          val r = reader.readElement()
+          r.beginEntryNoTag()
+          val elem = elemUnpickler.unpickle(elemTag, r)
+          r.endEntry()
+          builder += elem.asInstanceOf[A]
+          i = i + 1
+        }
+
+        preader.popHints()
+        preader.endCollection()
+        builder.result
+      }
     }
-
-    def unpickle(tpe: => FastTypeTag[_], preader: PReader): Any = {
-      val reader = preader.beginCollection()
-
-      preader.pushHints()
-      if (isPrimitive) {
-        reader.hintStaticallyElidedType()
-        reader.hintTag(elemTag)
-        reader.pinHints()
-      } else {
-        reader.hintTag(elemTag) // custom code here
-        reader.pinHints()       // custom code here
-      }
-
-      val length = reader.readLength()
-      val builder = cbf.apply()
-      var i = 0
-      while (i < length) {
-        val r = reader.readElement()
-        r.beginEntryNoTag()
-        val elem = elemUnpickler.unpickle(elemTag, r)
-        r.endEntry()
-        builder += elem.asInstanceOf[A]
-        i = i + 1
-      }
-
-      preader.popHints()
-      preader.endCollection()
-      builder.result
-    }
-  }
 }

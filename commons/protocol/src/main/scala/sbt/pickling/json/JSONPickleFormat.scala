@@ -6,7 +6,7 @@ import scala.reflect.runtime.universe._
 import definitions._
 import org.json4s._
 import scala.util.parsing.json.JSONFormat.quoteString
-import scala.collection.mutable.{StringBuilder, Stack}
+import scala.collection.mutable.{ StringBuilder, Stack }
 import scala.util.{ Success, Failure }
 
 package json {
@@ -29,7 +29,7 @@ package json {
     def createReader(pickle: JSONPickle, mirror: Mirror) = {
       jawn.support.json4s.Parser.parseFromString(pickle.value) match {
         case Success(json) => new JSONPickleReader(json, mirror, this)
-        case Failure(e)    => throw new PicklingException("failed to parse \"" + pickle.value + "\" as JSON: " + e.getMessage)
+        case Failure(e) => throw new PicklingException("failed to parse \"" + pickle.value + "\" as JSON: " + e.getMessage)
       }
     }
   }
@@ -90,30 +90,29 @@ package json {
       indent()
     }
     private val primitives = Map[String, Any => Unit](
-      FastTypeTag.Unit.key ->         ((picklee: Any) => append("\"()\"")),
-      FastTypeTag.Null.key ->         ((picklee: Any) => append("null")),
-      FastTypeTag.Ref.key ->          ((picklee: Any) => throw new Error("fatal error: shouldn't be invoked explicitly")),
-      FastTypeTag.Int.key ->          ((picklee: Any) => append(picklee.toString)),
-      FastTypeTag.Long.key ->         ((picklee: Any) => append(picklee.toString)), // append("\"" + quoteString(picklee.toString) + "\"")),
-      FastTypeTag.Short.key ->        ((picklee: Any) => append(picklee.toString)),
-      FastTypeTag.Double.key ->       ((picklee: Any) => append(picklee.toString)),
-      FastTypeTag.Float.key ->        ((picklee: Any) => append(picklee.toString)),
-      FastTypeTag.Boolean.key ->      ((picklee: Any) => append(picklee.toString)),
-      FastTypeTag.Byte.key ->         ((picklee: Any) => append(picklee.toString)),
-      FastTypeTag.Char.key ->         ((picklee: Any) => append("\"" + quoteString(picklee.toString) + "\"")),
-      FastTypeTag.String.key ->       ((picklee: Any) => append("\"" + quoteString(picklee.toString) + "\"")),
-      FastTypeTag.ArrayByte.key ->    ((picklee: Any) => pickleArray(picklee.asInstanceOf[Array[Byte]], FastTypeTag.Byte)),
-      FastTypeTag.ArrayShort.key ->   ((picklee: Any) => pickleArray(picklee.asInstanceOf[Array[Short]], FastTypeTag.Short)),
-      FastTypeTag.ArrayChar.key ->    ((picklee: Any) => pickleArray(picklee.asInstanceOf[Array[Char]], FastTypeTag.Char)),
-      FastTypeTag.ArrayInt.key ->     ((picklee: Any) => pickleArray(picklee.asInstanceOf[Array[Int]], FastTypeTag.Int)),
-      FastTypeTag.ArrayLong.key ->    ((picklee: Any) => pickleArray(picklee.asInstanceOf[Array[Long]], FastTypeTag.Long)),
+      FastTypeTag.Unit.key -> ((picklee: Any) => append("\"()\"")),
+      FastTypeTag.Null.key -> ((picklee: Any) => append("null")),
+      FastTypeTag.Ref.key -> ((picklee: Any) => throw new Error("fatal error: shouldn't be invoked explicitly")),
+      FastTypeTag.Int.key -> ((picklee: Any) => append(picklee.toString)),
+      FastTypeTag.Long.key -> ((picklee: Any) => append(picklee.toString)), // append("\"" + quoteString(picklee.toString) + "\"")),
+      FastTypeTag.Short.key -> ((picklee: Any) => append(picklee.toString)),
+      FastTypeTag.Double.key -> ((picklee: Any) => append(picklee.toString)),
+      FastTypeTag.Float.key -> ((picklee: Any) => append(picklee.toString)),
+      FastTypeTag.Boolean.key -> ((picklee: Any) => append(picklee.toString)),
+      FastTypeTag.Byte.key -> ((picklee: Any) => append(picklee.toString)),
+      FastTypeTag.Char.key -> ((picklee: Any) => append("\"" + quoteString(picklee.toString) + "\"")),
+      FastTypeTag.String.key -> ((picklee: Any) => append("\"" + quoteString(picklee.toString) + "\"")),
+      FastTypeTag.ArrayByte.key -> ((picklee: Any) => pickleArray(picklee.asInstanceOf[Array[Byte]], FastTypeTag.Byte)),
+      FastTypeTag.ArrayShort.key -> ((picklee: Any) => pickleArray(picklee.asInstanceOf[Array[Short]], FastTypeTag.Short)),
+      FastTypeTag.ArrayChar.key -> ((picklee: Any) => pickleArray(picklee.asInstanceOf[Array[Char]], FastTypeTag.Char)),
+      FastTypeTag.ArrayInt.key -> ((picklee: Any) => pickleArray(picklee.asInstanceOf[Array[Int]], FastTypeTag.Int)),
+      FastTypeTag.ArrayLong.key -> ((picklee: Any) => pickleArray(picklee.asInstanceOf[Array[Long]], FastTypeTag.Long)),
       FastTypeTag.ArrayBoolean.key -> ((picklee: Any) => pickleArray(picklee.asInstanceOf[Array[Boolean]], FastTypeTag.Boolean)),
-      FastTypeTag.ArrayFloat.key ->   ((picklee: Any) => pickleArray(picklee.asInstanceOf[Array[Float]], FastTypeTag.Float)),
-      FastTypeTag.ArrayDouble.key ->  ((picklee: Any) => pickleArray(picklee.asInstanceOf[Array[Double]], FastTypeTag.Double))
-    )
+      FastTypeTag.ArrayFloat.key -> ((picklee: Any) => pickleArray(picklee.asInstanceOf[Array[Float]], FastTypeTag.Float)),
+      FastTypeTag.ArrayDouble.key -> ((picklee: Any) => pickleArray(picklee.asInstanceOf[Array[Double]], FastTypeTag.Double)))
     private def isIterable(tag: FastTypeTag[_]): Boolean =
       (tag.tpe <:< typeOf[collection.Iterable[_]]) ||
-      (tag.tpe <:< typeOf[scala.Array[_]])
+        (tag.tpe <:< typeOf[scala.Array[_]])
     private def isOption(tag: FastTypeTag[_]): Boolean =
       tag.tpe <:< typeOf[Option[_]]
     def beginEntry(picklee: Any): PBuilder = withHints { hints =>
@@ -138,8 +137,7 @@ package json {
           //   append("}")
           //   indent()
           // }
-        }
-        else if (isIterable(hints.tag)) ()
+        } else if (isIterable(hints.tag)) ()
         else if (isOption(hints.tag)) ()
         else {
           appendLine("{")
@@ -197,107 +195,108 @@ package json {
       FastTypeTag.Unit.key -> (() => ()),
       FastTypeTag.Null.key -> (() => null),
       FastTypeTag.Ref.key -> (() => lookupUnpicklee(datum match {
-        case obj: JObject => 
+        case obj: JObject =>
           (obj \ "$ref") match {
             case JDouble(num) => num.toInt
-            case x: JValue    => unexpectedValue(x)
+            case x: JValue => unexpectedValue(x)
           }
       })),
       FastTypeTag.Int.key -> (() => datum match {
         case JDouble(num) => num.toInt
-        case x: JValue    => unexpectedValue(x)
+        case x: JValue => unexpectedValue(x)
       }),
       FastTypeTag.Short.key -> (() => datum match {
         case JDouble(num) => num.toShort
-        case x: JValue    => unexpectedValue(x)
+        case x: JValue => unexpectedValue(x)
       }),
       FastTypeTag.Double.key -> (() => datum match {
         case JDouble(num) => num
-        case x: JValue    => unexpectedValue(x)
+        case x: JValue => unexpectedValue(x)
       }),
       FastTypeTag.Float.key -> (() => datum match {
         case JDouble(num) => num.toFloat
-        case x: JValue    => unexpectedValue(x)
+        case x: JValue => unexpectedValue(x)
       }),
       FastTypeTag.Long.key -> (() => datum match {
         case JDouble(num) => num.toLong
-        case JString(s)   => s.toLong
-        case x: JValue    => unexpectedValue(x)
+        case JString(s) => s.toLong
+        case x: JValue => unexpectedValue(x)
       }),
       FastTypeTag.Byte.key -> (() => datum match {
         case JDouble(num) => num.toByte
-        case x: JValue    => unexpectedValue(x)
+        case x: JValue => unexpectedValue(x)
       }),
       FastTypeTag.Boolean.key -> (() => datum match {
-        case JBool(b)  => b
+        case JBool(b) => b
         case x: JValue => unexpectedValue(x)
       }),
       FastTypeTag.Char.key -> (() => datum match {
         case JString(s) => s.head
-        case x: JValue  => unexpectedValue(x)
+        case x: JValue => unexpectedValue(x)
       }),
       FastTypeTag.String.key -> (() => datum match {
         case JString(s) => s
-        case x: JValue  => unexpectedValue(x)
+        case x: JValue => unexpectedValue(x)
       }),
       FastTypeTag.ArrayByte.key -> (() => (datum match {
         case JArray(arr) =>
           arr map {
             case JDouble(num) => num.toByte
-            case x: JValue    => unexpectedValue(x)  
+            case x: JValue => unexpectedValue(x)
           }
       }).toArray),
       FastTypeTag.ArrayShort.key -> (() => (datum match {
         case JArray(arr) =>
           arr map {
             case JDouble(num) => num.toShort
-            case x: JValue    => unexpectedValue(x)  
+            case x: JValue => unexpectedValue(x)
           }
       }).toArray),
       FastTypeTag.ArrayChar.key -> (() => (datum match {
         case JArray(arr) =>
           arr map {
             case JString(s) => s.head
-            case x: JValue  => unexpectedValue(x)  
+            case x: JValue => unexpectedValue(x)
           }
       }).toArray),
-      FastTypeTag.ArrayInt.key -> { () => (datum match {
-        case JArray(arr) =>
-          arr map {
-            case JDouble(num) => num.toInt
-            case x: JValue    => unexpectedValue(x)  
-          }
-      }).toArray },
+      FastTypeTag.ArrayInt.key -> { () =>
+        (datum match {
+          case JArray(arr) =>
+            arr map {
+              case JDouble(num) => num.toInt
+              case x: JValue => unexpectedValue(x)
+            }
+        }).toArray
+      },
       FastTypeTag.ArrayLong.key -> (() => (datum match {
         case JArray(arr) =>
           arr map {
             case JDouble(num) => num.toLong
-            case JString(s)   => s.toLong
-            case x: JValue  => unexpectedValue(x)  
+            case JString(s) => s.toLong
+            case x: JValue => unexpectedValue(x)
           }
       }).toArray),
       FastTypeTag.ArrayBoolean.key -> (() => (datum match {
         case JArray(arr) =>
           arr map {
-            case JBool(b)  => b
-            case x: JValue => unexpectedValue(x)  
+            case JBool(b) => b
+            case x: JValue => unexpectedValue(x)
           }
       }).toArray),
       FastTypeTag.ArrayFloat.key -> (() => (datum match {
         case JArray(arr) =>
           arr map {
             case JDouble(num) => num.toFloat
-            case x: JValue    => unexpectedValue(x)  
+            case x: JValue => unexpectedValue(x)
           }
       }).toArray),
       FastTypeTag.ArrayDouble.key -> (() => (datum match {
         case JArray(arr) =>
           arr map {
             case JDouble(num) => num
-            case x: JValue    => unexpectedValue(x)  
+            case x: JValue => unexpectedValue(x)
           }
-      }).toArray)
-    )      
+      }).toArray))
     private def unexpectedValue(value: JValue): Nothing =
       throw new PicklingException("unexpected value: " + value.toString)
     private def mkNestedReader(datum: Any) = {
@@ -316,8 +315,7 @@ package json {
         val tag = beginEntry()
         if (tag == null) sys.error("tag is null")
         tag.key
-      }
-      else beginEntry().key
+      } else beginEntry().key
     def beginEntry(): FastTypeTag[_] = withHints { hints =>
       lastReadTag = {
         if (datum == null) FastTypeTag.Null
@@ -341,13 +339,12 @@ package json {
                     // c) Choose Apple if json has unknown and hint says Apple
                     if (tagFromJson.tpe <:< hints.tag.tpe) tagFromJson
                     else hints.tag
-                  }
-                  catch {
+                  } catch {
                     case e: Throwable if e.getMessage contains "cannot find class" =>
                       if (Option(hints.tag.tpe.typeSymbol) map {
-                        case sym: ClassSymbol => sym.isAbstractClass || sym.isTrait 
-                        case _  => true
-                      } getOrElse(true)) throw PicklingException(e.getMessage)
+                        case sym: ClassSymbol => sym.isAbstractClass || sym.isTrait
+                        case _ => true
+                      } getOrElse (true)) throw PicklingException(e.getMessage)
                       else hints.tag
                     case e: Throwable => throw e
                   }
@@ -363,8 +360,7 @@ package json {
     private val primitiveSeqKeys: Vector[String] = Vector(
       FastTypeTag.ArrayByte.key, FastTypeTag.ArrayShort.key, FastTypeTag.ArrayChar.key,
       FastTypeTag.ArrayInt.key, FastTypeTag.ArrayLong.key, FastTypeTag.ArrayBoolean.key,
-      FastTypeTag.ArrayFloat.key, FastTypeTag.ArrayDouble.key
-    )
+      FastTypeTag.ArrayFloat.key, FastTypeTag.ArrayDouble.key)
     def readPrimitive(): Any = {
       datum match {
         case JArray(list) if !primitiveSeqKeys.contains(lastReadTag.key) =>
@@ -393,10 +389,10 @@ package json {
     // support readLength of non arrays for Option[A] to pretend to be a collection
     def readLength(): Int = {
       datum match {
-        case JNothing     => 0 // Option[A] support
-        case JNull        => 0 // Option[A] support
+        case JNothing => 0 // Option[A] support
+        case JNull => 0 // Option[A] support
         case JArray(list) => list.length
-        case _            => 1 // Option[A] support
+        case _ => 1 // Option[A] support
       }
     }
     private var i = 0
@@ -404,7 +400,7 @@ package json {
       val reader = {
         datum match {
           case JArray(list) => mkNestedReader(list(i))
-          case _            => this // Option[A] support
+          case _ => this // Option[A] support
         }
       }
       i += 1

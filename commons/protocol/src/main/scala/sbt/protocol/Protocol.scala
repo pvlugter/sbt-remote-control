@@ -6,6 +6,7 @@ package sbt.protocol
 import play.api.libs.json.JsValue
 import java.io.File
 import scala.collection.immutable
+import scala.pickling.{ FastTypeTag, SPickler }
 
 /**
  * A marker trait for *any* message that is passed back/forth from
@@ -168,14 +169,20 @@ final case class BackgroundJobLogEvent(jobId: Long, entry: LogEntry) extends Log
 }
 
 /** A custom event from a task. "name" is conventionally the simplified class name. */
-final case class TaskEvent(taskId: Long, name: String, serialized: JsValue) extends Event
+final case class TaskEvent(taskId: Long, name: String, serialized: SerializedValue) extends Event
 
 object TaskEvent {
   import play.api.libs.json.Writes
 
-  def apply[T: Writes](taskId: Long, event: T): TaskEvent = {
-    val json = implicitly[Writes[T]].writes(event)
-    TaskEvent(taskId, MessageSerialization.makeSimpleName(event.getClass), json)
+  // def apply[T: Writes](taskId: Long, event: T): TaskEvent = {
+  //   val json = implicitly[Writes[T]].writes(event)
+  //   TaskEvent(taskId, MessageSerialization.makeSimpleName(event.getClass), json)
+  // }
+
+  def apply[A: FastTypeTag: SPickler](taskId: Long, a: A): TaskEvent = {
+    import pickling._, sbt.pickling.json._
+    val json = JsonUtil.parseJson("{}")
+    TaskEvent(taskId, json)
   }
 }
 
@@ -191,7 +198,9 @@ trait TaskEventUnapply[T] {
       if (name != taskEvent.name) {
         None
       } else {
-        Json.fromJson[T](taskEvent.serialized).asOpt map { result => taskEvent.taskId -> result }
+        // TODO: Fix this
+        sys.error("???")
+        // Json.fromJson[T](taskEvent.serialized).asOpt map { result => taskEvent.taskId -> result }
       }
     case other => None
   }

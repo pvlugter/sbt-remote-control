@@ -177,15 +177,17 @@ private[protocol] object MessageSerialization {
 
   // This needs a custom formatter because it has a custom apply/unapply
   // which confuses the auto-formatter macro
-  private implicit val taskEventWrites: Writes[TaskEvent] = (
-    (__ \ "taskId").write[Long] and
-    (__ \ "name").write[String] and
-    (__ \ "serialized").write[JsValue])(unlift(TaskEvent.unapply))
+  private implicit val taskEventWrites: Writes[TaskEvent] = ???
+  // (
+  //   (__ \ "taskId").write[Long] and
+  //   (__ \ "name").write[String] and
+  //   (__ \ "serialized").write[JsValue])(unlift(TaskEvent.unapply))
 
-  private implicit val taskEventReads: Reads[TaskEvent] = (
-    (__ \ "taskId").read[Long] and
-    (__ \ "name").read[String] and
-    (__ \ "serialized").read[JsValue])((id, name, serialized) => TaskEvent(id, name, serialized))
+  private implicit val taskEventReads: Reads[TaskEvent] = ???
+  // (
+  //   (__ \ "taskId").read[Long] and
+  //   (__ \ "name").read[String] and
+  //   (__ \ "serialized").read[JsValue])((id, name, serialized) => TaskEvent(id, name, serialized))
 
   private implicit val valueChangedReads = Json.reads[ValueChanged]
 

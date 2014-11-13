@@ -50,7 +50,12 @@ object TheBuild extends Build {
       Keys.resourceGenerators in Compile += (Def.task {
         Properties.makeDefaultSbtVersionFile(sbt13Version, (Keys.resourceManaged in Compile).value)
       }).taskValue,
-      libraryDependencies ++= Seq("org.scala-lang" %% "scala-pickling" % "0.9.0")
+      libraryDependencies ++= Seq(
+        "org.scala-lang" %% "scala-pickling" % "0.9.0",
+        "org.json4s" %% "json4s-native" % "3.2.10",
+        "org.spire-math" %% "jawn-parser" % "0.6.0",
+        "org.spire-math" %% "json4s-support" % "0.6.0"
+      )
     )
   )
   lazy val picklerPrototype = (project in file("pickler")).
@@ -58,12 +63,10 @@ object TheBuild extends Build {
     settings(
       parallelExecution in Test := false,
       libraryDependencies ++= Seq(
-        "org.json4s" %% "json4s-native" % "3.2.10",
-        "org.spire-math" %% "jawn-parser" % "0.6.0",
-        "org.spire-math" %% "json4s-support" % "0.6.0",
         // "org.specs2" %% "specs2" % "2.3.11" % "test"
         junitInterface % "test"
-      )
+      ),
+      scalacOptions ++= Seq("-Xmax-classfile-name", "72")
     )
 
   // ================= Remote Controler main project ==========================
