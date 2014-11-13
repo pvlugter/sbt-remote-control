@@ -1,28 +1,59 @@
 package sbt.pickling.spec
 
-import collection.immutable.::
-import org.specs2._
+import org.junit.Assert._
+import org.junit._
+import java.io.File
+import java.net.URI
 import scala.pickling._, sbt.pickling.json._
+import SpecsUtil._
+import JUnitUtil._
 
-class BasicPicklerSpec extends Specification {
-  def is = args(sequential = true) ^ s2"""
+class BasicPicklerTest {
+  @Test
+  def testInt: Unit = {
+    1.pickle.value must_== "1"
+    "1".unpickle[Int] must_== 1
+  }
 
-  This is a specification to check custom JSON pickling.
+  @Test
+  def testLong: Unit = {
+    1L.pickle.value must_== "1"
+    "1".unpickle[Long] must_== 1L
+  }
 
-  1 should
-    pickle as 1                                                 ${ 1.pickle.value must_== "1" }
-    and unpickle from 1.                                        ${ "1".unpickle[Int] must_== 1 }
-  1L should
-    pickle as 1                                                 ${ 1L.pickle.value must_== "1" }
-    and unpickle from 1.                                        ${ "1".unpickle[Long] must_== 1L }
-  "a" should
-    pickle as "a"                                               ${ "a".pickle.value must_== "\"a\"" }
-    and unpickle from "a".                                      ${ "\"a\"".unpickle[String] must_== "a" }
-  false should
-    pickle as false                                             ${ false.pickle.value must_== "false" }
-    and unpickle from false.                                    ${ "false".unpickle[Boolean] must_== false }
-  1.0 should
-    pickle as 1.0                                               ${ 1.0.pickle.value must_== "1.0" }
-    and unpickle from 1.0.                                      ${ "1.0".unpickle[Double] must_== 1.0 }
-                                                                """
+  @Test
+  def testString: Unit = {
+    "a".pickle.value must_== "\"a\""
+    "\"a\"".unpickle[String] must_== "a"
+  }
+
+  @Test
+  def testBoolean: Unit = {
+    false.pickle.value must_== "false"
+    "false".unpickle[Boolean] must_== false
+  }
+
+  @Test
+  def testDouble: Unit = {
+    1.0.pickle.value must_== "1.0"
+    "1.0".unpickle[Double] must_== 1.0  
+  }
+
+  @Test
+  def testRoundtrip: Unit = {
+    roundTrip("Foo")
+    roundTrip(new File("/tmp"))
+    roundTrip(new URI("/tmp"))
+    roundTrip(true)
+    roundTrip(false)
+    roundTrip(10: Short)
+    roundTrip(11)
+    roundTrip(12L)
+    roundTrip(13.0f)
+    roundTrip(14.0)
+    roundTrip(None: Option[String])        // roundTrip(None) must fail to compile
+    roundTrip(Some("Foo"): Option[String]) // roundTrip(Some("Foo")) must fail to compile
+    roundTrip(Some(true): Option[Boolean]) // roundTrip(Some(true)) must fail to compile
+    roundTrip(Some(10): Option[Int])       // roundTrip(Some(10)) must fail to compile
+  }
 }

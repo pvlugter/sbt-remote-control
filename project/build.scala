@@ -49,18 +49,20 @@ object TheBuild extends Build {
     settings(
       Keys.resourceGenerators in Compile += (Def.task {
         Properties.makeDefaultSbtVersionFile(sbt13Version, (Keys.resourceManaged in Compile).value)
-      }).taskValue
+      }).taskValue,
+      libraryDependencies ++= Seq("org.scala-lang" %% "scala-pickling" % "0.9.0")
     )
   )
   lazy val picklerPrototype = (project in file("pickler")).
     dependsOn(sbtServer13).
     settings(
       parallelExecution in Test := false,
-      libraryDependencies ++= Seq("org.scala-lang" %% "scala-pickling" % "0.9.0",
+      libraryDependencies ++= Seq(
         "org.json4s" %% "json4s-native" % "3.2.10",
         "org.spire-math" %% "jawn-parser" % "0.6.0",
         "org.spire-math" %% "json4s-support" % "0.6.0",
-        "org.specs2" %% "specs2" % "2.3.11" % "test"
+        // "org.specs2" %% "specs2" % "2.3.11" % "test"
+        junitInterface % "test"
       )
     )
 

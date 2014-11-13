@@ -1,107 +1,140 @@
 package sbt.pickling.spec
 
-import org.specs2._
+import org.junit.Assert._
+import org.junit._
+import java.io.File
+import java.net.URI
 import scala.pickling._, sbt.pickling.json._
+import SpecsUtil._
+import JUnitUtil._
 
-class ArrayPicklerSpec extends Specification {
-  def is = args(sequential = true) ^ s2"""
+class ArrayPicklerTest {
+  @Test
+  def testArrays: Unit = {
+    // Array(1: Byte) should pickle as [1]
+    pointed1[Array, Byte]
+    // pointed2[Array, Byte]
+    
+    // Array(1: Short) should pickle as [1]
+    pointed1[Array, Short]
+    // pointed2[Array, Short]
+    
+    // Array('a') should pickle as ["a"].
+    pointed1[Array, Char]
+    // pointed2[Array, Char]
+    
+    // Array("a") should pickle as ["a"]
+    pointed1[Array, String]
+    // pointed2[Array, String]
+    
+    // Array(1) should pickle as [1]
+    pointed1[Array, Int]
+    // pointed2[Array, Int]
+    
+    // Array(1L) should pickle as [1] 
+    pointed1[Array, Long]
+    // pointed2[Array, Long]
+    
+    // Array(false) should pickle as [false]
+    pointed1[Array, Boolean]
+    // pointed2[Array, Boolean]
+    
+    // Array(1.0F) should pickle as [1.0]
+    pointed1[Array, Float]
+    // pointed2[Array, Float]
+    
+    // Array(1.0) should pickle as [1.0]
+    pointed1[Array, Double]
+    // pointed2[Array, Double]
+  }
 
-  This is a specification to check custom JSON pickling.
+  @Test
+  def testLists: Unit = {
+    // List(1: Byte) should pickle as [1]
+    pointed1[List, Byte]
+    pointed2[List, Byte]
+    // List(1: Short) should pickle as [1]
+    pointed1[List, Short]
+    pointed2[List, Short]
+    // List('a') should pickle as ["a"]
+    pointed1[List, Char]
+    pointed2[List, Char]
+    // List("a") should pickle as ["a"]
+    pointed1[List, String]
+    pointed2[List, String]
+    // List(1) should pickle as [1]
+    pointed1[List, Int]
+    pointed2[List, Int]
+    // List(1L) should pickle as [1]
+    pointed1[List, Long]
+    pointed2[List, Long]
+    // List(false) should pickle as [false]
+    pointed1[List, Boolean]
+    pointed2[List, Boolean]
+    // List(1.0F) should pickle as [1.0]
+    pointed1[List, Float]
+    pointed2[List, Float]
+    // List(1.0) should pickle as [1.0]
+    pointed1[List, Double]
+    pointed2[List, Double]
+  }
 
-  Array(1: Byte) should
-    pickle as [1]                                               ${pointed1[Array, Byte]}
-    and unpickle from [1].                                      ${pointed2[Array, Byte]}
-  Array(1: Short) should
-    pickle as [1]                                               ${pointed1[Array, Short]}
-    and unpickle from [1].                                      ${pointed2[Array, Short]}
-  Array('a') should
-    pickle as ["a"]                                             ${pointed1[Array, Char]}
-    and unpickle from ["a"].                                    ${pointed2[Array, Char]}
-  Array("a") should
-    pickle as ["a"]                                             ${pointed1[Array, String]}
-    and unpickle from ["a"].                                    ${pointed2[Array, String]}
-  Array(1) should
-    pickle as [1]                                               ${pointed1[Array, Int]}
-    and unpickle from [1].                                      ${pointed2[Array, Int]}
-  Array(1L) should
-    pickle as [1]                                               ${pointed1[Array, Long]}
-    and unpickle from [1].                                      ${pointed2[Array, Long]}
-  Array(false) should
-    pickle as [false]                                           ${pointed1[Array, Boolean]}
-    and unpickle from [false].                                  ${pointed2[Array, Boolean]}
-  Array(1.0F) should
-    pickle as [1.0]                                             ${pointed1[Array, Float]}
-    and unpickle from [1.0].                                    ${pointed2[Array, Float]}
-  Array(1.0) should
-    pickle as [1.0]                                             ${pointed1[Array, Double]}
-    and unpickle from [1.0].                                    ${pointed2[Array, Double]}
-  List(1: Byte) should
-    pickle as [1]                                               ${pointed1[List, Byte]}
-    and unpickle from [1].                                      ${pointed2[List, Byte]}
-  List(1: Short) should
-    pickle as [1]                                               ${pointed1[List, Short]}
-    and unpickle from [1].                                      ${pointed2[List, Short]}
-  List('a') should
-    pickle as ["a"]                                             ${pointed1[List, Char]}
-    and unpickle from ["a"].                                    ${pointed2[List, Char]}
-  List("a") should
-    pickle as ["a"]                                             ${pointed1[List, String]}
-    and unpickle from ["a"].                                    ${pointed2[List, String]}
-  List(1) should
-    pickle as [1]                                               ${pointed1[List, Int]}
-    and unpickle from [1].                                      ${pointed2[List, Int]}
-  List(1L) should
-    pickle as [1]                                               ${pointed1[List, Long]}
-    and unpickle from [1].                                      ${pointed2[List, Long]}
-  List(false) should
-    pickle as [false]                                           ${pointed1[List, Boolean]}
-    and unpickle from [false].                                  ${pointed2[List, Boolean]}
-  List(1.0F) should
-    pickle as [1.0]                                             ${pointed1[List, Float]}
-    and unpickle from [1.0].                                    ${pointed2[List, Float]}
-  List(1.0) should
-    pickle as [1.0]                                             ${pointed1[List, Double]}
-    and unpickle from [1.0].                                    ${pointed2[List, Double]}
-  Vector(1: Byte) should
-    pickle as [1]                                               ${pointed1[Vector, Byte]}
-    and unpickle from [1].                                      ${pointed2[Vector, Byte]}
-  Vector(1: Short) should
-    pickle as [1]                                               ${pointed1[Vector, Short]}
-    and unpickle from [1].                                      ${pointed2[Vector, Short]}
-  Vector('a') should
-    pickle as ["a"]                                             ${pointed1[Vector, Char]}
-    and unpickle from ["a"].                                    ${pointed2[Vector, Char]}
-  Vector("a") should
-    pickle as ["a"]                                             ${pointed1[Vector, String]}
-    and unpickle from ["a"].                                    ${pointed2[Vector, String]}
-  Vector(1) should
-    pickle as [1]                                               ${pointed1[Vector, Int]}
-    and unpickle from [1].                                      ${pointed2[Vector, Int]}
-  Vector(1L) should
-    pickle as [1]                                               ${pointed1[Vector, Long]}
-    and unpickle from [1].                                      ${pointed2[Vector, Long]}
-  Vector(false) should
-    pickle as [false]                                           ${pointed1[Vector, Boolean]}
-    and unpickle from [false].                                  ${pointed2[Vector, Boolean]}
-  Vector(1.0F) should
-    pickle as [1.0]                                             ${pointed1[Vector, Float]}
-    and unpickle from [1.0].                                    ${pointed2[Vector, Float]}
-  Vector(1.0) should
-    pickle as [1.0]                                             ${pointed1[Vector, Double]}
-    and unpickle from [1.0].                                    ${pointed2[Vector, Double]}
-  Some(1): Option[Int] should
-    pickle as 1                                                 ${ (Some(1): Option[Int]).pickle.value must_== "1" }
-    and unpickle from 1.                                        ${ "1".unpickle[Option[Int]] must_== Some(1) }
-  Some("a"): Option[String] should
-    pickle as "a"                                               ${ (Some("a"): Option[String]).pickle.value must_== "\"a\"" }
-    and unpickle from "a".                                      ${ "\"a\"".unpickle[Option[String]] must_== Some("a") }
-  None: Option[Int] should
-    pickle as null                                              ${ (None: Option[Int]).pickle.value must_== "null" }
-    and unpickle from null.                                     ${ "null".unpickle[Option[Int]] must_== None }
-  None: Option[String] should
-    pickle as null                                              ${ (None: Option[String]).pickle.value must_== "null" }
-    and unpickle from null.                                     ${ "null".unpickle[Option[String]] must_== None }
-                                                                """
+  @Test
+  def testVectors: Unit = {
+    // Vector(1: Byte) should pickle as [1]
+    pointed1[Vector, Byte]
+    pointed2[Vector, Byte]
+    // Vector(1: Short) should pickle as [1]
+    pointed1[Vector, Short]
+    pointed2[Vector, Short]
+    // Vector('a') should pickle as ["a"]
+    pointed1[Vector, Char]
+    pointed2[Vector, Char]
+    // Vector("a") should pickle as ["a"]
+    pointed1[Vector, String]
+    pointed2[Vector, String]
+    // Vector(1) should pickle as [1]
+    pointed1[Vector, Int]
+    pointed2[Vector, Int]
+    // Vector(1L) should pickle as [1]
+    pointed1[Vector, Long]
+    pointed2[Vector, Long]
+    // Vector(false) should pickle as [false]
+    pointed1[Vector, Boolean]
+    pointed2[Vector, Boolean]
+    // Vector(1.0F) should pickle as [1.0]
+    pointed1[Vector, Float]
+    pointed2[Vector, Float]
+    // Vector(1.0) should pickle as [1.0]
+    pointed1[Vector, Double]
+    pointed2[Vector, Double]
+  }
+
+  @Test
+  def testOptions: Unit = {
+    (Some(1): Option[Int]).pickle.value must_== "1"
+    "1".unpickle[Option[Int]] must_== Some(1)
+
+    (Some("a"): Option[String]).pickle.value must_== "\"a\""
+    "\"a\"".unpickle[Option[String]] must_== Some("a")
+
+    (None: Option[Int]).pickle.value must_== "null"
+    "null".unpickle[Option[Int]] must_== None
+
+    (None: Option[String]).pickle.value must_== "null"
+    "null".unpickle[Option[String]] must_== None
+  }
+
+  @Test
+  def testRoundtrip: Unit = {
+    roundTrip(Nil) // custom format to support both Nil and List[A]
+    roundTrip(Nil: List[String])
+    roundTrip(Vector(): Vector[String])
+    // roundTrip(Array("Bar", "Baz"))
+    roundTrip(Vector("Bar", "Baz"))
+    roundTrip(List("Bar", "Baz"))
+    roundTrip(Vector(1, 2, 3))
+  }
 
   def trimLine(s: String): String =
     (s.lines map {_.trim}).mkString("\n")
