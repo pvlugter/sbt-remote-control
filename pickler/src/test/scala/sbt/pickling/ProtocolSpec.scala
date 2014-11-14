@@ -20,8 +20,6 @@ class ProtocolTest {
     builds = Seq(build),
     projects = Seq(protocol.MinimalProjectStructure(scope.project.get, Seq("com.foo.Plugin"))))
 
-  final case class PlayStartedEvent(port: Int)
-
   @Test
   def testMessages: Unit = {
     // messages
@@ -73,9 +71,9 @@ class ProtocolTest {
 
   @Test
   def testTaskEvents: Unit = {
-    // roundTripMessage(protocol.TaskEvent(8, PlayStartedEvent(port = 10)))
+    roundTripMessage(protocol.TaskEvent(8, PlayStartedEvent(port = 10)))
     // roundTripMessage(protocol.BackgroundJobStarted(9, protocol.BackgroundJobInfo(id = 67, humanReadableName = "foojob", spawningTask = scopedKey)))
-    // roundTripMessage(protocol.BackgroundJobFinished(9, 67))
-    // roundTripMessage(protocol.BackgroundJobEvent(67, PlayStartedEvent(port = 10)))
+    roundTripMessage(protocol.BackgroundJobFinished(9, 67))
+    roundTripMessage(protocol.BackgroundJobEvent(67, PlayStartedEvent(port = 10)))
   }
 }

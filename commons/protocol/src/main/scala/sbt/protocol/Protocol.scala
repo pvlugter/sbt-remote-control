@@ -172,18 +172,8 @@ final case class BackgroundJobLogEvent(jobId: Long, entry: LogEntry) extends Log
 final case class TaskEvent(taskId: Long, name: String, serialized: SerializedValue) extends Event
 
 object TaskEvent {
-  import play.api.libs.json.Writes
-
-  // def apply[T: Writes](taskId: Long, event: T): TaskEvent = {
-  //   val json = implicitly[Writes[T]].writes(event)
-  //   TaskEvent(taskId, MessageSerialization.makeSimpleName(event.getClass), json)
-  // }
-
-  def apply[A: FastTypeTag: SPickler](taskId: Long, a: A): TaskEvent = {
-    import pickling._, sbt.pickling.json._
-    val json = JsonUtil.parseJson("{}")
-    TaskEvent(taskId, json)
-  }
+  def apply[A: FastTypeTag: SPickler](taskId: Long, a: A): TaskEvent =
+    TaskEvent(taskId, MessageSerialization.makeSimpleName(a.getClass), SerializedValue(a))
 }
 
 /** Companion objects of events which can go in a task event extend this */
@@ -199,23 +189,19 @@ trait TaskEventUnapply[T] {
         None
       } else {
         // TODO: Fix this
-        sys.error("???")
         // Json.fromJson[T](taskEvent.serialized).asOpt map { result => taskEvent.taskId -> result }
+        ???
       }
     case other => None
   }
 }
 
 /** A custom event from a task. "name" is conventionally the simplified class name. */
-final case class BackgroundJobEvent(jobId: Long, name: String, serialized: JsValue) extends Event
+final case class BackgroundJobEvent(jobId: Long, name: String, serialized: SerializedValue) extends Event
 
 object BackgroundJobEvent {
-  import play.api.libs.json.Writes
-
-  def apply[T: Writes](jobId: Long, event: T): BackgroundJobEvent = {
-    val json = implicitly[Writes[T]].writes(event)
-    BackgroundJobEvent(jobId, MessageSerialization.makeSimpleName(event.getClass), json)
-  }
+  def apply[A: FastTypeTag: SPickler](jobId: Long, a: A): BackgroundJobEvent =
+    BackgroundJobEvent(jobId, MessageSerialization.makeSimpleName(a.getClass), SerializedValue(a))
 }
 
 /** Companion objects of events which can go in a task event extend this */
@@ -230,7 +216,9 @@ trait BackgroundJobEventUnapply[T] {
       if (name != jobEvent.name) {
         None
       } else {
-        Json.fromJson[T](jobEvent.serialized).asOpt map { result => jobEvent.jobId -> result }
+        // TODO: Fix this
+        // Json.fromJson[T](jobEvent.serialized).asOpt map { result => jobEvent.jobId -> result }
+        ???
       }
     case other => None
   }

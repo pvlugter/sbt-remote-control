@@ -58,7 +58,9 @@ private[server] class TaskSendEventService(taskIdFinder: TaskIdFinder, eventSink
 private final class BackgroundJobSendEventService(jobId: Long, eventSink: JsonSink[BackgroundJobEvent])
   extends SbtPrivateSendEventService {
   override def sendEvent[T: Writes](event: T): Unit =
-    eventSink.send(BackgroundJobEvent(jobId, event))
+    // TODO: FIx this
+    ???
+  // eventSink.send(BackgroundJobEvent(jobId, event))
 }
 
 private final class ServerBackgroundJobService(executionIdFinder: ExecutionIdFinder, logSink: JsonSink[protocol.LogEvent], eventSink: JsonSink[BackgroundJobEvent])

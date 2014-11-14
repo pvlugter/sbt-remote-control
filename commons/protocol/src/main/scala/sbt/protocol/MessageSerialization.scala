@@ -177,13 +177,13 @@ private[protocol] object MessageSerialization {
 
   // This needs a custom formatter because it has a custom apply/unapply
   // which confuses the auto-formatter macro
-  private implicit val taskEventWrites: Writes[TaskEvent] = ???
+  // private implicit val taskEventWrites: Writes[TaskEvent] = ???
   // (
   //   (__ \ "taskId").write[Long] and
   //   (__ \ "name").write[String] and
   //   (__ \ "serialized").write[JsValue])(unlift(TaskEvent.unapply))
 
-  private implicit val taskEventReads: Reads[TaskEvent] = ???
+  // private implicit val taskEventReads: Reads[TaskEvent] = ???
   // (
   //   (__ \ "taskId").read[Long] and
   //   (__ \ "name").read[String] and
@@ -195,17 +195,17 @@ private[protocol] object MessageSerialization {
 
   // This needs a custom formatter because it has a custom apply/unapply
   // which confuses the auto-formatter macro
-  private implicit val backgroundJobEventWrites = Writes[BackgroundJobEvent] { event =>
-    Json.obj("jobId" -> event.jobId, "name" -> event.name, "serialized" -> event.serialized)
-  }
+  // private implicit val backgroundJobEventWrites = Writes[BackgroundJobEvent] { event =>
+  //   Json.obj("jobId" -> event.jobId, "name" -> event.name, "serialized" -> event.serialized)
+  // }
 
-  private implicit val backgroundJobEventReads = Reads[BackgroundJobEvent] { v =>
-    for {
-      jobId <- (v \ "jobId").validate[Long]
-      name <- (v \ "name").validate[String]
-      serialized = (v \ "serialized")
-    } yield BackgroundJobEvent(jobId = jobId, name = name, serialized = serialized)
-  }
+  // private implicit val backgroundJobEventReads = Reads[BackgroundJobEvent] { v =>
+  //   for {
+  //     jobId <- (v \ "jobId").validate[Long]
+  //     name <- (v \ "name").validate[String]
+  //     serialized = (v \ "serialized")
+  //   } yield BackgroundJobEvent(jobId = jobId, name = name, serialized = serialized)
+  // }
 
   private implicit val completionReads = Json.reads[Completion]
   private implicit val completionWrites = Json.writes[Completion]
@@ -277,12 +277,14 @@ private[protocol] object MessageSerialization {
     msg[KeyLookupRequest],
     msg[AnalyzeExecutionRequest],
     msg[AnalyzeExecutionResponse],
-    msg[TaskEvent],
+    // TODO: Fix this
+    // msg[TaskEvent],
     msg[BuildLoaded],
     msg[BuildFailedToLoad],
     msg[BackgroundJobStarted],
-    msg[BackgroundJobFinished],
-    msg[BackgroundJobEvent])
+    msg[BackgroundJobFinished] // TODO: Fix this
+    // msg[BackgroundJobEvent]
+    )
 
   private val readsIndex: Map[String, Reads[_]] =
     (for {
