@@ -9,9 +9,10 @@ import SpecsUtil._
 import JUnitUtil._
 import sbt.protocol
 import sbt.protocol.Message
+import scala.pickling.internal.AppliedType
 
 class ProtocolTest {
-  val key = protocol.AttributeKey("name", protocol.TypeInfo("java.lang.String"))
+  val key = protocol.AttributeKey("name", AppliedType.parse("java.lang.String")._1)
   val build = new java.net.URI("file:///test/project")
   val projectRef = protocol.ProjectReference(build, "test")
   val scope = protocol.SbtScope(project = Some(projectRef))

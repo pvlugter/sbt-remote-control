@@ -7,6 +7,7 @@ import play.api.libs.json._
 import Reads._
 import Writes._
 import sbt.GenericSerializers._
+import scala.pickling.internal.AppliedType
 
 /**
  *  Represents the type information we can serialize over a network
@@ -68,11 +69,12 @@ object TypeInfo {
  * This represents a "key" in sbt.
  *  Keys have names and "types" associated.
  */
-final case class AttributeKey(name: String, manifest: TypeInfo) {
+final case class AttributeKey(name: String, manifest: AppliedType) {
   override def toString = "AttributeKey[" + manifest + "](\"" + name + "\")"
 }
 object AttributeKey {
-  require(implicitly[Reads[TypeInfo]] ne null)
+  implicit val readsAT: Reads[AppliedType] = Json.reads[AppliedType]
+  implicit val writesAT: Writes[AppliedType] = Json.writes[AppliedType]
   implicit val reads: Reads[AttributeKey] = Json.reads[AttributeKey]
   implicit val writes: OWrites[AttributeKey] = Json.writes[AttributeKey]
 }
