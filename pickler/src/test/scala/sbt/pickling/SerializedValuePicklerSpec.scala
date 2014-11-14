@@ -12,7 +12,22 @@ import protocol.SerializedValue
 
 class SerializedValuePicklerTest {
   @Test
-  def testRoundtrip: Unit = {
-    roundTrip(protocol.SerializedValue(1): protocol.SerializedValue)
+  def testRoundtripInt: Unit = {
+    val value: SerializedValue = SerializedValue(1)
+    value.pickle.value must_== "1.0"
+    value.parse[Int].get must_== 1
+    roundTrip(SerializedValue(1): SerializedValue)
+  }
+
+  @Test
+  def testRoundtripPlayStarted: Unit = {
+    val value = SerializedValue(PlayStartedEvent(10))
+    val example = """{"port":10.0,"$type":"sbt.pickling.spec.PlayStartedEvent"}"""
+    value.pickle.value must_== example
+    val recovered = example.unpickle[SerializedValue]
+    recovered.parse[PlayStartedEvent].get must_== PlayStartedEvent(10)
+    roundTrip(SerializedValue(PlayStartedEvent(10)))
   }
 }
+
+final case class PlayStartedEvent(port: Int)

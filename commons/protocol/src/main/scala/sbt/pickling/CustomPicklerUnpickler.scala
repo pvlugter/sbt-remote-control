@@ -7,26 +7,48 @@ import scala.reflect.runtime.universe._
 import scala.collection.immutable.::
 import scala.collection.generic.CanBuildFrom
 import sbt.protocol.{ SerializedValue, JsonValue, SbtPrivateSerializedValue }
+import org.json4s.{ JValue, JString }
+
+object FakeTags {
+  val JValue = implicitly[FastTypeTag[JValue]]
+}
 
 trait CustomPicklerUnpickler extends LowPriorityCustomPicklerUnpickler {
-  implicit def jsonValuePickler(implicit pf: PickleFormat): SPickler[JsonValue] with Unpickler[JsonValue] = new SPickler[JsonValue] with Unpickler[JsonValue] {
+  private def jvaluePickler(implicit pf: PickleFormat): SPickler[JValue] with Unpickler[JValue] = new SPickler[JValue] with Unpickler[JValue] {
     val format: PickleFormat = pf
     val stringPickler = implicitly[SPickler[String]]
     val stringUnpickler = implicitly[Unpickler[String]]
-    def pickle(jv: JsonValue, builder: PBuilder): Unit = {
+    def pickle(jv: JValue, builder: PBuilder): Unit = {
       builder.pushHints()
-      builder.hintTag(FastTypeTag.String)
-      stringPickler.pickle(jv.json, builder)
+      builder.hintTag(FakeTags.JValue)
+      builder.beginEntry(jv)
+      builder.endEntry()
       builder.popHints()
     }
     def unpickle(tag: => FastTypeTag[_], preader: PReader): Any = {
-      val s = stringUnpickler.unpickle(FastTypeTag.String, preader).asInstanceOf[String]
-      try {
-        val result = JsonValue(s)
-        result
-      } catch {
-        case _: Throwable => throw new PicklingException(s""""$s" is not valid ${tag.tpe}""")
-      }
+      preader.pushHints()
+      preader.hintTag(tag)
+      preader.beginEntryNoTag()
+      val result = preader.readPrimitive
+      preader.endEntry
+      preader.popHints()
+      result
+    }
+  }
+
+  implicit def jsonValuePickler(implicit pf: PickleFormat): SPickler[JsonValue] with Unpickler[JsonValue] = new SPickler[JsonValue] with Unpickler[JsonValue] {
+    val format: PickleFormat = pf
+    val jvPickler = jvaluePickler
+    val jvUnpickler = jvaluePickler
+    def pickle(jv: JsonValue, builder: PBuilder): Unit = {
+      builder.pushHints()
+      builder.hintTag(FakeTags.JValue)
+      jvPickler.pickle(jv.json, builder)
+      builder.popHints()
+    }
+    def unpickle(tag: => FastTypeTag[_], preader: PReader): Any = {
+      val json = jvUnpickler.unpickle(FakeTags.JValue, preader).asInstanceOf[JValue]
+      JsonValue(json)
     }
   }
 

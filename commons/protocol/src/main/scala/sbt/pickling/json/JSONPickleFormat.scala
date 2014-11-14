@@ -110,11 +110,15 @@ package json {
       FastTypeTag.ArrayBoolean.key -> ((picklee: Any) => pickleArray(picklee.asInstanceOf[Array[Boolean]], FastTypeTag.Boolean)),
       FastTypeTag.ArrayFloat.key -> ((picklee: Any) => pickleArray(picklee.asInstanceOf[Array[Float]], FastTypeTag.Float)),
       FastTypeTag.ArrayDouble.key -> ((picklee: Any) => pickleArray(picklee.asInstanceOf[Array[Double]], FastTypeTag.Double)))
+
     private def isIterable(tag: FastTypeTag[_]): Boolean =
       (tag.tpe <:< typeOf[collection.Iterable[_]]) ||
         (tag.tpe <:< typeOf[scala.Array[_]])
     private def isOption(tag: FastTypeTag[_]): Boolean =
       tag.tpe <:< typeOf[Option[_]]
+    private def isJValue(tag: FastTypeTag[_]): Boolean =
+      (tag.key startsWith "org.json4s.JsonAST.")
+
     def beginEntry(picklee: Any): PBuilder = withHints { hints =>
       indent()
       if (hints.oid != -1) {
@@ -137,6 +141,11 @@ package json {
           //   append("}")
           //   indent()
           // }
+        } else if (isJValue(hints.tag)) {
+          appendJson(picklee match {
+            case json: JValue => json
+            case _ => throw new PicklingException("json expected but found: " + picklee.toString)
+          })
         } else if (isIterable(hints.tag)) ()
         else if (isOption(hints.tag)) ()
         else {
@@ -152,6 +161,10 @@ package json {
       }
       this
     }
+    def appendJson(json: JValue): Unit = {
+      import org.json4s.native.JsonMethods._
+      append(compact(render(json)))
+    }
     def putField(name: String, pickler: PBuilder => Unit): PBuilder = {
       // assert(!primitives.contains(tags.top.key), tags.top)
       if (!lastIsBrace) appendLine(",") // TODO: very inefficient, but here we don't care much about performance
@@ -163,6 +176,7 @@ package json {
       unindent()
       val tag = tags.pop()
       if (primitives.contains(tag.key)) () // do nothing
+      else if (isJValue(tag)) ()
       else if (isIterable(tag)) ()
       else if (isOption(tag)) ()
       else { appendLine(); append("}") }
@@ -361,8 +375,16 @@ package json {
       FastTypeTag.ArrayByte.key, FastTypeTag.ArrayShort.key, FastTypeTag.ArrayChar.key,
       FastTypeTag.ArrayInt.key, FastTypeTag.ArrayLong.key, FastTypeTag.ArrayBoolean.key,
       FastTypeTag.ArrayFloat.key, FastTypeTag.ArrayDouble.key)
+    def atJValue: Boolean = (lastReadTag.key startsWith "org.json4s.JsonAST.")
+    def readJValue: JValue =
+      datum match {
+        case x: JValue => x
+      }
+
     def readPrimitive(): Any = {
       datum match {
+        case x if atJValue =>
+          readJValue
         case JArray(list) if !primitiveSeqKeys.contains(lastReadTag.key) =>
           // now this is a hack!
           val value = mkNestedReader(list.head).primitives(lastReadTag.key)()

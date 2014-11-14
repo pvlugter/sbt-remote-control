@@ -1,7 +1,7 @@
 package sbt.protocol
 
 import scala.pickling.{ FastTypeTag, SPickler, Unpickler }
-import org.json4s.JValue
+import org.json4s.{ JValue, JString }
 import scala.util.Try
 
 /**
@@ -23,10 +23,11 @@ private[sbt] sealed trait SbtPrivateSerializedValue extends SerializedValue {
 }
 
 /** A value we have serialized as JSON */
-private[sbt] final case class JsonValue(json: String /* TODO a non-string ast */ ) extends SbtPrivateSerializedValue {
+private[sbt] final case class JsonValue(json: JValue) extends SbtPrivateSerializedValue {
   override def parse[A: FastTypeTag: Unpickler]: Try[A] = {
     import sbt.pickling.json._
-    Try(JSONPickle(json).unpickle[A])
+    import org.json4s.native.JsonMethods._
+    Try(JSONPickle(compact(render(json))).unpickle[A])
   }
   override def toJson = this
 }
@@ -34,7 +35,7 @@ private[sbt] final case class JsonValue(json: String /* TODO a non-string ast */
 private[sbt] object JsonValue {
   def apply[A: FastTypeTag: SPickler](a: A): JsonValue = {
     import scala.pickling._, sbt.pickling.json._
-    JsonValue(a.pickle.value)
+    new JsonValue(JsonUtil.parseJson(a.pickle.value))
   }
   // val emptyObject = JsonValue("{}")
 }

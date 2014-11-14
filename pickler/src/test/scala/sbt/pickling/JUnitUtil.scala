@@ -32,6 +32,6 @@ object JUnitUtil {
     }
   }
   implicit class AnyOp[A](a: A) {
-    def must_==(b: A): Unit = assertEquals(a, b)
+    def must_==(b: A): Unit = assertEquals(b, a)
   }
 }
