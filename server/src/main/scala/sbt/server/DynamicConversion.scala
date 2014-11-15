@@ -1,8 +1,6 @@
 package sbt
 package server
 
-import play.api.libs.json.{ Format, Reads, Writes }
-
 /**
  * An interface representing a mechanism to convert types
  * using their runtime manifest.

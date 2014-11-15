@@ -50,12 +50,12 @@ class ProtocolTest {
     roundTripMessage(protocol.TaskFinished(48, 1, None, true))
     roundTripMessage(protocol.BuildStructureChanged(buildStructure))
 
-    // roundTripMessage(protocol.ValueChanged(scopedKey, protocol.TaskSuccess(protocol.BuildValue("HI"))))
-    // roundTripMessage(protocol.ValueChanged(scopedKey, protocol.TaskSuccess(protocol.BuildValue(42))))
-    // roundTripMessage(protocol.ValueChanged(scopedKey, protocol.TaskSuccess(protocol.BuildValue(43L))))
-    // roundTripMessage(protocol.ValueChanged(scopedKey, protocol.TaskSuccess(protocol.BuildValue(true))))
-    // roundTripMessage(protocol.ValueChanged(scopedKey, protocol.TaskSuccess(protocol.BuildValue(0.0))))
-    // roundTripMessage(protocol.ValueChanged(scopedKey, protocol.TaskSuccess(protocol.BuildValue(0.0f))))
+    roundTripMessage(protocol.ValueChanged(scopedKey, protocol.TaskSuccess(protocol.BuildValue("HI"))))
+    roundTripMessage(protocol.ValueChanged(scopedKey, protocol.TaskSuccess(protocol.BuildValue(42))))
+    roundTripMessage(protocol.ValueChanged(scopedKey, protocol.TaskSuccess(protocol.BuildValue(43L))))
+    roundTripMessage(protocol.ValueChanged(scopedKey, protocol.TaskSuccess(protocol.BuildValue(true))))
+    roundTripMessage(protocol.ValueChanged(scopedKey, protocol.TaskSuccess(protocol.BuildValue(0.0))))
+    roundTripMessage(protocol.ValueChanged(scopedKey, protocol.TaskSuccess(protocol.BuildValue(0.0f))))
   }
 
   @Test

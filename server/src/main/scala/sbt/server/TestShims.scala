@@ -1,8 +1,8 @@
 package sbt
 package server
 
-import play.api.libs.json.Format
 import sbt.testing.{ SuiteSelector, TestWildcardSelector, TestSelector }
+import scala.pickling._, sbt.pickling.json._
 
 object TestShims {
 

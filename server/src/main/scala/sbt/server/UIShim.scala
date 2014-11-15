@@ -11,6 +11,7 @@ import sbt.protocol.BackgroundJobFinished
 import sbt.protocol.CoreLogEvent
 import sbt.protocol.LogMessage
 import sbt.protocol.BackgroundJobInfo
+import scala.pickling._, sbt.pickling.json._
 
 private[server] class ServerInteractionService(state: ServerState) extends SbtPrivateInteractionService {
 
@@ -49,18 +50,14 @@ private[server] class TaskSendEventService(taskIdFinder: TaskIdFinder, eventSink
     taskIdFinder.bestGuessTaskId(taskIfKnown = None)
   }
 
-  override def sendEvent[T: Writes](event: T): Unit =
-    // TODO: Fix this
-    ???
-  // eventSink.send(TaskEvent(taskId, event))
+  override def sendEvent[A: FastTypeTag: SPickler](event: A): Unit =
+    eventSink.send(TaskEvent(taskId, event))
 }
 
 private final class BackgroundJobSendEventService(jobId: Long, eventSink: JsonSink[BackgroundJobEvent])
   extends SbtPrivateSendEventService {
-  override def sendEvent[T: Writes](event: T): Unit =
-    // TODO: FIx this
-    ???
-  // eventSink.send(BackgroundJobEvent(jobId, event))
+  override def sendEvent[A: FastTypeTag: SPickler](event: A): Unit =
+    eventSink.send(BackgroundJobEvent(jobId, event))
 }
 
 private final class ServerBackgroundJobService(executionIdFinder: ExecutionIdFinder, logSink: JsonSink[protocol.LogEvent], eventSink: JsonSink[BackgroundJobEvent])

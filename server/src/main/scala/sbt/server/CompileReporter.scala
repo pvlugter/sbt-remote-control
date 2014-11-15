@@ -3,6 +3,7 @@ package server
 
 import xsbti.Position
 import xsbti.Severity
+import scala.pickling._, sbt.pickling.json._
 
 class CompileReporter(
   sendEventService: SendEventService,

@@ -1,6 +1,7 @@
 package sbt
 
-import play.api.libs.json._
+import sbt.server.Format
+import scala.pickling.{ FastTypeTag, SPickler }
 
 sealed trait InteractionService {
   /** Prompts the user for input, optionally with a mask for characters. */
@@ -13,7 +14,7 @@ sealed trait InteractionService {
 
 sealed trait SendEventService {
   /** Sends an event out to all registered event listeners. */
-  def sendEvent[T: Writes](event: T): Unit
+  def sendEvent[A: FastTypeTag: SPickler](event: A): Unit
 }
 
 /**

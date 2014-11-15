@@ -1,7 +1,7 @@
 package sbt.protocol
 
 import scala.pickling.{ FastTypeTag, SPickler, Unpickler }
-import org.json4s.{ JValue, JString }
+import org.json4s.{ JValue, JString, JNull }
 import scala.util.Try
 
 /**
@@ -16,6 +16,7 @@ sealed trait SerializedValue {
 object SerializedValue {
   def apply[A: FastTypeTag: SPickler](a: A): SerializedValue =
     JsonValue[A](a)
+  def Null: SerializedValue = JsonValue(JNull)
 }
 
 private[sbt] sealed trait SbtPrivateSerializedValue extends SerializedValue {
@@ -37,7 +38,6 @@ private[sbt] object JsonValue {
     import scala.pickling._, sbt.pickling.json._
     new JsonValue(JsonUtil.parseJson(a.pickle.value))
   }
-  // val emptyObject = JsonValue("{}")
 }
 
 // With LazyValue I get: 

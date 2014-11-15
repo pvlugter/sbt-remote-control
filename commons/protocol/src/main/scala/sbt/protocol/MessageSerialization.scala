@@ -189,9 +189,9 @@ private[protocol] object MessageSerialization {
   //   (__ \ "name").read[String] and
   //   (__ \ "serialized").read[JsValue])((id, name, serialized) => TaskEvent(id, name, serialized))
 
-  private implicit val valueChangedReads = Json.reads[ValueChanged]
+  // private implicit val valueChangedReads = Json.reads[ValueChanged]
 
-  private implicit val valueChangedWrites = Json.writes[ValueChanged]
+  // private implicit val valueChangedWrites = Json.writes[ValueChanged]
 
   // This needs a custom formatter because it has a custom apply/unapply
   // which confuses the auto-formatter macro
@@ -267,7 +267,8 @@ private[protocol] object MessageSerialization {
     msg[SendSyntheticValueChanged],
     msg[KeyNotFound],
     msg[BuildStructureChanged],
-    msg[ValueChanged],
+    // TODO: Fix this
+    // msg[ValueChanged],
     msg[ErrorResponse],
     msg[TaskStarted],
     msg[TaskFinished],
