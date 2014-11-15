@@ -10,6 +10,7 @@ import JUnitUtil._
 import sbt.protocol
 import sbt.protocol.Message
 import scala.pickling.internal.AppliedType
+import xsbti.Severity.{ Info, Warn, Error }
 
 class ProtocolTest {
   val key = protocol.AttributeKey("name", AppliedType.parse("java.lang.String")._1)
@@ -20,6 +21,8 @@ class ProtocolTest {
   val buildStructure = protocol.MinimalBuildStructure(
     builds = Vector(build),
     projects = Vector(protocol.MinimalProjectStructure(scope.project.get, Vector("com.foo.Plugin"))))
+  val nopos = protocol.Position(None, None, None, "", None, None, None)
+  val severity = Error
 
   @Test
   def testMessages: Unit = {
@@ -72,9 +75,31 @@ class ProtocolTest {
 
   @Test
   def testTaskEvents: Unit = {
-    roundTripMessage(protocol.TaskEvent(8, PlayStartedEvent(port = 10)))
+    import protocol.CompilationFailure
+    val taskEvent1 = protocol.TaskEvent(8, PlayStartedEvent(port = 10))
+    val recovered1 = taskEvent1.pickle.value.unpickle[protocol.TaskEvent]
+    recovered1 match {
+      case PlayStartedEvent(taskId, PlayStartedEvent(port)) => port must_== 10
+    }
+    roundTripMessage(taskEvent1)
+    
+    val taskEvent2 = protocol.TaskEvent(9, CompilationFailure(projectRef, nopos, severity, "aww snap"))
+    val recovered2 = taskEvent2.pickle.value.unpickle[protocol.TaskEvent]
+    val failure = recovered2.serialized.parse[CompilationFailure].get
+    failure.message must_== "aww snap"
+    roundTripMessage(taskEvent2)
+  }
+
+  @Test
+  def testBackgroundJobEvent: Unit = {
     roundTripMessage(protocol.BackgroundJobStarted(9, protocol.BackgroundJobInfo(id = 67, humanReadableName = "foojob", spawningTask = scopedKey)))
     roundTripMessage(protocol.BackgroundJobFinished(9, 67))
-    roundTripMessage(protocol.BackgroundJobEvent(67, PlayStartedEvent(port = 10)))
+
+    val bgje = protocol.BackgroundJobEvent(67, PlayStartedEvent(port = 10))
+    val recovered3 = bgje.pickle.value.unpickle[protocol.BackgroundJobEvent]
+    recovered3 match {
+      case PlayStartedEventBg(taskId, PlayStartedEvent(port)) => port must_== 10
+    }
+    roundTripMessage(bgje)    
   }
 }

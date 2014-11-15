@@ -6,7 +6,7 @@ package sbt.protocol
 import play.api.libs.json.JsValue
 import java.io.File
 import scala.collection.immutable
-import scala.pickling.{ FastTypeTag, SPickler }
+import scala.pickling.{ FastTypeTag, SPickler, Unpickler }
 
 /**
  * A marker trait for *any* message that is passed back/forth from
@@ -177,21 +177,14 @@ object TaskEvent {
 }
 
 /** Companion objects of events which can go in a task event extend this */
-trait TaskEventUnapply[T] {
-  import play.api.libs.json.Reads
+trait TaskEventUnapply[A] {
   import scala.reflect.ClassTag
-  import play.api.libs.json.Json
 
-  def unapply(event: Event)(implicit reads: Reads[T], classTag: ClassTag[T]): Option[(Long, T)] = event match {
+  def unapply(event: Event)(implicit tag: FastTypeTag[A], unpickler: Unpickler[A], classTag: ClassTag[A]): Option[(Long, A)] = event match {
     case taskEvent: TaskEvent =>
-      val name = MessageSerialization.makeSimpleName(implicitly[ClassTag[T]].runtimeClass)
-      if (name != taskEvent.name) {
-        None
-      } else {
-        // TODO: Fix this
-        // Json.fromJson[T](taskEvent.serialized).asOpt map { result => taskEvent.taskId -> result }
-        ???
-      }
+      val name = MessageSerialization.makeSimpleName(implicitly[ClassTag[A]].runtimeClass)
+      if (name != taskEvent.name) None
+      else taskEvent.serialized.parse[A].toOption map { result => taskEvent.taskId -> result }
     case other => None
   }
 }
@@ -205,21 +198,14 @@ object BackgroundJobEvent {
 }
 
 /** Companion objects of events which can go in a task event extend this */
-trait BackgroundJobEventUnapply[T] {
-  import play.api.libs.json.Reads
+trait BackgroundJobEventUnapply[A] {
   import scala.reflect.ClassTag
-  import play.api.libs.json.Json
 
-  def unapply(event: Event)(implicit reads: Reads[T], classTag: ClassTag[T]): Option[(Long, T)] = event match {
+  def unapply(event: Event)(implicit tag: FastTypeTag[A], unpickler: Unpickler[A], classTag: ClassTag[A]): Option[(Long, A)] = event match {
     case jobEvent: BackgroundJobEvent =>
-      val name = MessageSerialization.makeSimpleName(implicitly[ClassTag[T]].runtimeClass)
-      if (name != jobEvent.name) {
-        None
-      } else {
-        // TODO: Fix this
-        // Json.fromJson[T](jobEvent.serialized).asOpt map { result => jobEvent.jobId -> result }
-        ???
-      }
+      val name = MessageSerialization.makeSimpleName(implicitly[ClassTag[A]].runtimeClass)
+      if (name != jobEvent.name) None
+      else jobEvent.serialized.parse[A].toOption map { result => jobEvent.jobId -> result }
     case other => None
   }
 }
@@ -313,10 +299,19 @@ case object TestSkipped extends TestOutcome {
   override def toString = "skipped"
 }
 
+final case class Position(
+  sourcePath: Option[String],
+  sourceFile: Option[File],
+  line: Option[Int],
+  lineContent: String,
+  offset: Option[Int],
+  pointer: Option[Int],
+  pointerSpace: Option[String])
+
 /** A compilation issue from the compiler. */
 final case class CompilationFailure(
   project: ProjectReference,
-  position: xsbti.Position,
+  position: Position,
   severity: xsbti.Severity,
   message: String)
 

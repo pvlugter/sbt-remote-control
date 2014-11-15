@@ -52,6 +52,25 @@ object SbtToProtocolUtils {
       task = taskString)
   }
 
+  def positionToProtocol(in: xsbti.Position): protocol.Position = {
+    import xsbti.Maybe
+    import java.lang.Integer
+    def mi2o(mi: Maybe[Integer]): Option[Int] =
+      if (mi.isDefined) Some(mi.get)
+      else None
+    def m2o[A](m: Maybe[A]): Option[A] =
+      if (m.isDefined) Some(m.get)
+      else None
+    protocol.Position(
+      sourcePath = m2o[String](in.sourcePath),
+      sourceFile = m2o[java.io.File](in.sourceFile),
+      line = mi2o(in.line),
+      lineContent = in.lineContent,
+      offset = mi2o(in.offset),
+      pointer = mi2o(in.pointer),
+      pointerSpace = m2o[String](in.pointerSpace))
+  }
+
   def analysisToProtocol(in: sbt.inc.Analysis): protocol.Analysis =
     protocol.Analysis(stamps = stampsToProtocol(in.stamps),
       apis = apisToProtocol(in.apis),

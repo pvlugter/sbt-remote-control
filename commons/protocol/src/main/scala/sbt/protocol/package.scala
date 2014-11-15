@@ -192,16 +192,16 @@ package object protocol {
       "outcome" -> event.outcome, "error" -> event.error, "duration" -> event.duration)
   }
 
-  implicit val compilationFailureReads: Reads[CompilationFailure] = (
-    (__ \ "project").read[ProjectReference] and
-    (__ \ "position").read[xsbti.Position] and
-    (__ \ "severity").read[xsbti.Severity] and
-    (__ \ "message").read[String])(CompilationFailure.apply _)
+  // implicit val compilationFailureReads: Reads[CompilationFailure] = (
+  //   (__ \ "project").read[ProjectReference] and
+  //   (__ \ "position").read[xsbti.Position] and
+  //   (__ \ "severity").read[xsbti.Severity] and
+  //   (__ \ "message").read[String])(CompilationFailure.apply _)
 
-  implicit val compilationFailureWrites: Writes[CompilationFailure] = Writes[CompilationFailure] { event =>
-    Json.obj("project" -> event.project, "position" -> event.position,
-      "severity" -> event.severity, "message" -> event.message)
-  }
+  // implicit val compilationFailureWrites: Writes[CompilationFailure] = Writes[CompilationFailure] { event =>
+  //   Json.obj("project" -> event.project, "position" -> event.position,
+  //     "severity" -> event.severity, "message" -> event.message)
+  // }
 
   implicit val immutableByteArrayReads: Reads[ByteArray] = Reads(_.asOpt[String] map { in =>
     try {
