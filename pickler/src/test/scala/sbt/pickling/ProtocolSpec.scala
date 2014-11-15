@@ -59,6 +59,8 @@ class ProtocolTest {
     roundTripMessage(protocol.ValueChanged(scopedKey, protocol.TaskSuccess(protocol.BuildValue(true))))
     roundTripMessage(protocol.ValueChanged(scopedKey, protocol.TaskSuccess(protocol.BuildValue(0.0))))
     roundTripMessage(protocol.ValueChanged(scopedKey, protocol.TaskSuccess(protocol.BuildValue(0.0f))))
+    
+    roundTripMessage(protocol.ValueChanged(scopedKey, protocol.TaskFailure(protocol.BuildValue(new Exception("bam"): Throwable)))) 
   }
 
   @Test
