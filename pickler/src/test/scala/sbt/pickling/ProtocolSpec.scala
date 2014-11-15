@@ -11,6 +11,7 @@ import sbt.protocol
 import sbt.protocol.Message
 import scala.pickling.internal.AppliedType
 import xsbti.Severity.{ Info, Warn, Error }
+import scala.util.{Try, Success, Failure}
 
 class ProtocolTest {
   val key = protocol.AttributeKey("name", AppliedType.parse("java.lang.String")._1)
@@ -52,15 +53,32 @@ class ProtocolTest {
     roundTripMessage(protocol.TaskStarted(47, 1, None))
     roundTripMessage(protocol.TaskFinished(48, 1, None, true))
     roundTripMessage(protocol.BuildStructureChanged(buildStructure))
+  }
 
-    roundTripMessage(protocol.ValueChanged(scopedKey, protocol.TaskSuccess(protocol.BuildValue("HI"))))
+  @Test
+  def testValueChanged: Unit = {
+    val taskSuccess = protocol.TaskSuccess(protocol.BuildValue("HI"))
+    val v1 = protocol.ValueChanged(scopedKey, taskSuccess)
+    val recovered1 = v1.pickle.value.unpickle[protocol.ValueChanged]
+    recovered1.value.result[String] match {
+      case Success("HI") => ()
+      case _             => sys.error("unexpected failure")
+    }
+    roundTripMessage(v1)
+
     roundTripMessage(protocol.ValueChanged(scopedKey, protocol.TaskSuccess(protocol.BuildValue(42))))
     roundTripMessage(protocol.ValueChanged(scopedKey, protocol.TaskSuccess(protocol.BuildValue(43L))))
     roundTripMessage(protocol.ValueChanged(scopedKey, protocol.TaskSuccess(protocol.BuildValue(true))))
     roundTripMessage(protocol.ValueChanged(scopedKey, protocol.TaskSuccess(protocol.BuildValue(0.0))))
     roundTripMessage(protocol.ValueChanged(scopedKey, protocol.TaskSuccess(protocol.BuildValue(0.0f))))
-    
-    roundTripMessage(protocol.ValueChanged(scopedKey, protocol.TaskFailure(protocol.BuildValue(new Exception("bam"): Throwable)))) 
+    val taskFailure = protocol.TaskFailure(protocol.BuildValue(new Exception("bam"): Throwable))
+    val v2 = protocol.ValueChanged(scopedKey, taskFailure) 
+    val recovered2 = v2.pickle.value.unpickle[protocol.ValueChanged]
+    recovered2.value.result[Int] match {
+      case Failure(e) => e.getMessage must_== "bam"
+      case Success(_) => sys.error("unexpected success")
+    }
+    roundTripMessage(v2)
   }
 
   @Test
