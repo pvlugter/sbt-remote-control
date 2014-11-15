@@ -129,7 +129,7 @@ object ScopedKey {
   implicit val writes: OWrites[ScopedKey] = Json.writes[ScopedKey]
 }
 /** A means of JSON-serializing key lists from sbt to our client. */
-final case class KeyList(keys: Seq[ScopedKey])
+final case class KeyList(keys: Vector[ScopedKey])
 object KeyList {
   implicit val reads: Reads[KeyList] = Json.reads[KeyList]
   implicit val writes: OWrites[KeyList] = Json.writes[KeyList]
@@ -139,15 +139,15 @@ object KeyList {
 final case class MinimalProjectStructure(
   id: ProjectReference,
   // Class names of plugins used by this project.
-  plugins: Seq[String])
+  plugins: Vector[String])
 object MinimalProjectStructure {
   implicit val reads: Reads[MinimalProjectStructure] = Json.reads[MinimalProjectStructure]
   implicit val writes: OWrites[MinimalProjectStructure] = Json.writes[MinimalProjectStructure]
 }
 
 final case class MinimalBuildStructure(
-  builds: Seq[URI],
-  projects: Seq[MinimalProjectStructure] // TODO - For each project, we may want to incldue a list of serializable key by configuration (minimize amount of data sent) that we can
+  builds: Vector[URI],
+  projects: Vector[MinimalProjectStructure] // TODO - For each project, we may want to incldue a list of serializable key by configuration (minimize amount of data sent) that we can
   // "unwind" on the client side into ScopedKeys.
   )
 object MinimalBuildStructure {

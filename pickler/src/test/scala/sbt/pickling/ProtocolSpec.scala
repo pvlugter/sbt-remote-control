@@ -18,8 +18,8 @@ class ProtocolTest {
   val scope = protocol.SbtScope(project = Some(projectRef))
   val scopedKey = protocol.ScopedKey(key, scope)
   val buildStructure = protocol.MinimalBuildStructure(
-    builds = Seq(build),
-    projects = Seq(protocol.MinimalProjectStructure(scope.project.get, Seq("com.foo.Plugin"))))
+    builds = Vector(build),
+    projects = Vector(protocol.MinimalProjectStructure(scope.project.get, Vector("com.foo.Plugin"))))
 
   @Test
   def testMessages: Unit = {
@@ -48,7 +48,7 @@ class ProtocolTest {
     roundTripMessage(protocol.TaskFinished(48, 1, Some(scopedKey), true))
     roundTripMessage(protocol.TaskStarted(47, 1, None))
     roundTripMessage(protocol.TaskFinished(48, 1, None, true))
-    // roundTripMessage(protocol.BuildStructureChanged(buildStructure))
+    roundTripMessage(protocol.BuildStructureChanged(buildStructure))
 
     // roundTripMessage(protocol.ValueChanged(scopedKey, protocol.TaskSuccess(protocol.BuildValue("HI"))))
     // roundTripMessage(protocol.ValueChanged(scopedKey, protocol.TaskSuccess(protocol.BuildValue(42))))

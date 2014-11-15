@@ -120,6 +120,9 @@ trait LowPriorityCustomPicklerUnpickler {
       ccUnpickler.unpickle(tag, preader).asInstanceOf[List[A]]
   }
   // Guard pickler
+  implicit def seqPickler[A: FastTypeTag]: SPickler[Seq[A]] with Unpickler[Seq[A]] =
+    sys.error("use Vector[A] or List[A] instead")
+  // Guard pickler
   implicit def setPickler[A: FastTypeTag]: SPickler[Set[A]] with Unpickler[Set[A]] =
     sys.error("use Vector[A] or List[A] instead")
   // Guard pickler
