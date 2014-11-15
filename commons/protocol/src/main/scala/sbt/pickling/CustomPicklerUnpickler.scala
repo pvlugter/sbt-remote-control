@@ -6,7 +6,7 @@ import scala.pickling._
 import scala.reflect.runtime.universe._
 import scala.collection.immutable.::
 import scala.collection.generic.CanBuildFrom
-import sbt.protocol.{ SerializedValue, JsonValue, SbtPrivateSerializedValue, ScopedKey, SbtScope, AttributeKey }
+import sbt.protocol.{ SerializedValue, JsonValue, SbtPrivateSerializedValue, ScopedKey, SbtScope, AttributeKey, ThrowableDeserialized, StackTraceElementDeserialized }
 import org.json4s.{ JValue, JString }
 
 object FakeTags {
@@ -62,6 +62,54 @@ trait CustomPicklerUnpickler extends LowPriorityCustomPicklerUnpickler {
       }
     def unpickle(tag: => FastTypeTag[_], preader: PReader): Any = {
       jsonUnpickler.unpickle(tag, preader)
+    }
+  }
+
+  implicit def throwablePickler(implicit pf: PickleFormat): SPickler[Throwable] with Unpickler[Throwable] = new SPickler[Throwable] with Unpickler[Throwable] {
+    val format = pf
+    val stringOptTag = implicitly[FastTypeTag[Option[String]]]
+    val stringOptPickler = implicitly[SPickler[Option[String]]]
+    val stringOptUnpickler = implicitly[Unpickler[Option[String]]]
+    val throwableTag = implicitly[FastTypeTag[Throwable]]
+    val throwableOptTag = implicitly[FastTypeTag[Option[Throwable]]]
+    val throwableOptPicklerUnpickler = optionPickler[Throwable](throwableTag, this, this, throwableOptTag, pf)
+    val vstedTag = implicitly[FastTypeTag[Vector[StackTraceElementDeserialized]]]
+    val vstedPickler = implicitly[SPickler[Vector[StackTraceElementDeserialized]]]
+    val vstedUnpickler = implicitly[Unpickler[Vector[StackTraceElementDeserialized]]]
+
+    def pickle(a: Throwable, builder: PBuilder): Unit = {
+      builder.beginEntry(a)
+      builder.putField("message", { b =>
+        b.hintTag(stringOptTag)
+        stringOptPickler.pickle(Option(a.getMessage), b)
+      })
+      builder.putField("cause", { b =>
+        b.hintTag(throwableOptTag)
+        throwableOptPicklerUnpickler.pickle(Option(a.getCause), b)
+      })
+      builder.putField("stackTrace", { b =>
+        b.hintTag(vstedTag)
+        vstedPickler.pickle(a.getStackTrace.toVector map { x =>
+          StackTraceElementDeserialized(x.getClassName, x.getMethodName, x.getFileName, x.getLineNumber)
+        }, b)
+      })
+      builder.endEntry()
+    }
+    def unpickle(tag: => FastTypeTag[_], preader: PReader): Any = {
+      val reader1 = preader.readField("message")
+      reader1.hintTag(stringOptTag)
+      val message = stringOptUnpickler.unpickle(stringOptTag, reader1).asInstanceOf[Option[String]]
+      val reader2 = preader.readField("cause")
+      reader2.hintTag(throwableOptTag)
+      val cause = throwableOptPicklerUnpickler.unpickle(throwableOptTag, reader2).asInstanceOf[Option[ThrowableDeserialized]]
+      val reader3 = preader.readField("stackTrace")
+      reader3.hintTag(vstedTag)
+      val stackTrace = vstedUnpickler.unpickle(vstedTag, reader3).asInstanceOf[Vector[StackTraceElementDeserialized]]
+      val result = ThrowableDeserialized(message, cause, stackTrace)
+      result.setStackTrace((stackTrace map { x =>
+        new StackTraceElement(x.declaringClass, x.methodName, x.fileName, x.lineNumber)
+      }).toArray)
+      result
     }
   }
 }

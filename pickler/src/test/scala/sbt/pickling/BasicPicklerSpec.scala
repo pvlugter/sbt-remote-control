@@ -56,4 +56,15 @@ class BasicPicklerTest {
     roundTrip(Some(true): Option[Boolean]) // roundTrip(Some(true)) must fail to compile
     roundTrip(Some(10): Option[Int])       // roundTrip(Some(10)) must fail to compile
   }
+
+  @Test
+  def testThrowable: Unit = {
+    roundTrip(new Exception(): Throwable)
+    roundTrip(new Exception("foo"): Throwable)
+    val nested: Throwable = new Exception("foo", new Exception("bar"))
+    val recovered = nested.pickle.value.unpickle[Throwable]
+    recovered.getCause.getMessage must_== "bar"
+    roundTrip(nested)
+    recovered.getStackTrace()(0).getFileName must_== "BasicPicklerSpec.scala"
+  }
 }

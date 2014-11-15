@@ -317,6 +317,18 @@ final case class CompilationFailure(
 
 object CompilationFailure extends TaskEventUnapply[CompilationFailure]
 
+final case class StackTraceElementDeserialized(
+  declaringClass: String,
+  methodName: String,
+  fileName: String,
+  lineNumber: Int)
+
+final case class ThrowableDeserialized(
+  message: Option[String],
+  cause: Option[ThrowableDeserialized],
+  stackTrace: Vector[StackTraceElementDeserialized]) extends Throwable(message.orNull, cause.orNull) {
+}
+
 /* Results related to compilation.
  * TODO let's put all of these in some kind of namespace because
  * there are a bunch of super-generic names like Analysis, API, Package, etc.
