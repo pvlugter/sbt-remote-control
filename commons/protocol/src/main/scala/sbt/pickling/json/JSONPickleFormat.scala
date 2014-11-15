@@ -150,13 +150,11 @@ package json {
         else if (isOption(hints.tag)) ()
         else {
           appendLine("{")
-          if (!hints.isElidedType) {
-            // quickly decide whether we should use picklee.getClass instead
-            val ts =
-              if (hints.tag.key.contains("anonfun$")) picklee.getClass.getName
-              else hints.tag.key
-            append("\"$type\": \"" + ts + "\"")
-          }
+          // Ignore isStaticallyElidedType. Always output $type.
+          val ts =
+            if (hints.tag.key.contains("anonfun$")) picklee.getClass.getName
+            else hints.tag.key
+          append("\"$type\": \"" + ts + "\"")
         }
       }
       this

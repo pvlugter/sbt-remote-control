@@ -43,8 +43,8 @@ class AppliedTypePicklerTest {
     roundTrip(scope)
   }
 
-  // @Test
-  // def testRoundtripScopedKey: Unit = {
-  //   roundTrip(scopedKey)
-  // }  
+  @Test
+  def testRoundtripScopedKey: Unit = {
+    roundTrip(scopedKey)
+  }
 }

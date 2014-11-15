@@ -35,7 +35,7 @@ class ProtocolTest {
     roundTripMessage(protocol.ListenToEvents())
     roundTripMessage(protocol.ListenToBuildChange())
     roundTripMessage(protocol.ExecutionRequest("test command string"))
-    // roundTripMessage(protocol.ListenToValue(scopedKey))
+    roundTripMessage(protocol.ListenToValue(scopedKey))
     roundTripMessage(protocol.CancelExecutionRequest(1))
     roundTripMessage(protocol.ErrorResponse("ZOMG"))
     roundTripMessage(protocol.CancelExecutionResponse(false))
@@ -44,8 +44,8 @@ class ProtocolTest {
   @Test
   def testEvents: Unit = {
     // events
-    // roundTripMessage(protocol.TaskStarted(47, 1, Some(scopedKey)))
-    // roundTripMessage(protocol.TaskFinished(48, 1, Some(scopedKey), true))
+    roundTripMessage(protocol.TaskStarted(47, 1, Some(scopedKey)))
+    roundTripMessage(protocol.TaskFinished(48, 1, Some(scopedKey), true))
     roundTripMessage(protocol.TaskStarted(47, 1, None))
     roundTripMessage(protocol.TaskFinished(48, 1, None, true))
     // roundTripMessage(protocol.BuildStructureChanged(buildStructure))
@@ -73,7 +73,7 @@ class ProtocolTest {
   @Test
   def testTaskEvents: Unit = {
     roundTripMessage(protocol.TaskEvent(8, PlayStartedEvent(port = 10)))
-    // roundTripMessage(protocol.BackgroundJobStarted(9, protocol.BackgroundJobInfo(id = 67, humanReadableName = "foojob", spawningTask = scopedKey)))
+    roundTripMessage(protocol.BackgroundJobStarted(9, protocol.BackgroundJobInfo(id = 67, humanReadableName = "foojob", spawningTask = scopedKey)))
     roundTripMessage(protocol.BackgroundJobFinished(9, 67))
     roundTripMessage(protocol.BackgroundJobEvent(67, PlayStartedEvent(port = 10)))
   }

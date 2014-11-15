@@ -64,29 +64,7 @@ trait CustomPicklerUnpickler extends LowPriorityCustomPicklerUnpickler {
       jsonUnpickler.unpickle(tag, preader)
     }
   }
-
-//   implicit def scopedKey(implicit pf: PickleFormat): SPickler[ScopedKey] with Unpickler[ScopedKey] = new SPickler[ScopedKey] with Unpickler[ScopedKey] {
-//     val format: PickleFormat = pf
-//     val keyTag = implicitly[FastTypeTag[AttributeKey]]
-//     val keyPickler = implicitly[SPickler[AttributeKey]]
-//     val keyUnpickler = implicitly[Unpickler[AttributeKey]]
-//     val scopeTag = implicitly[FastTypeTag[SbtScope]]
-//     val scopePickler = implicitly[SPickler[SbtScope]]
-//     val scopeUnpickler = implicitly[Unpickler[SbtScope]]
-//     def pickle(a: ScopedKey, builder: PBuilder): Unit = {
-//       builder.beginEntry(a)
-//       builder.putField("key", b => {
-//         b.hintTag(keyTag)
-//         keyPickler.pickle(a.key, b)
-//       })
-//       builder.putField("scope", b => {
-//         b.hintTag(scopeTag)
-//         scopePickler.pickle(a.scope, b)
-//       })
-//       builder.endEntry()
-//     }
-//   }
-// }
+}
 
 trait LowPriorityCustomPicklerUnpickler {
   implicit def canToStringPickler[A: FastTypeTag](implicit canToString: CanToString[A], pf: PickleFormat): SPickler[A] with Unpickler[A] = new SPickler[A] with Unpickler[A] {
