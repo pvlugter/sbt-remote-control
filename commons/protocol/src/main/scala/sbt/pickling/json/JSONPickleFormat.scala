@@ -112,10 +112,9 @@ package json {
       FastTypeTag.ArrayDouble.key -> ((picklee: Any) => pickleArray(picklee.asInstanceOf[Array[Double]], FastTypeTag.Double)))
 
     private def isIterable(tag: FastTypeTag[_]): Boolean =
-      (tag.tpe <:< typeOf[collection.Iterable[_]]) ||
-        (tag.tpe <:< typeOf[scala.Array[_]])
+      ManifestUtil.isApproxIterable(tag)
     private def isOption(tag: FastTypeTag[_]): Boolean =
-      tag.tpe <:< typeOf[Option[_]]
+      (tag.key startsWith "scala.Option[")
     private def isJValue(tag: FastTypeTag[_]): Boolean =
       (tag.key startsWith "org.json4s.JsonAST.")
 
@@ -349,7 +348,7 @@ package json {
                     // a) Choose Apple if json says Apple and hint says Fruit
                     // b) Choose Orange if json says Apple and hint says Orange
                     // c) Choose Apple if json has unknown and hint says Apple
-                    if (tagFromJson.tpe <:< hints.tag.tpe) tagFromJson
+                    if (ManifestUtil.isApproxSubType(tagFromJson, hints.tag)) tagFromJson
                     else hints.tag
                   } catch {
                     case e: Throwable if e.getMessage contains "cannot find class" =>
